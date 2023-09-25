@@ -1,0 +1,19 @@
+class XiondAT032 < Formula
+  desc ""
+  homepage ""
+  url "https://github.com/burnt-labs/xion/archive/refs/tags/v0.3.2.tar.gz"
+  sha256 "6102128985699eba2dea7025309b45df5f835de2ab0ff103a06ee28ecdce09e6"
+  license ""
+
+  depends_on "make" => :install
+  depends_on "go" => :install
+
+  def install
+    system "make", "install"
+    bin.install "#{ENV["GOPATH"]}/bin/xiond"
+  end
+
+  test do
+    system "xiond", "version"
+  end
+end
