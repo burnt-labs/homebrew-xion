@@ -1,5 +1,5 @@
 class XiondAT010 < Formula
-  desc "First blockchain built to make crypto, human"
+  desc "The Generalized Blockchain Abstraction Layer"
   homepage "https://burnt.com"
 
   XION_VERSION = "v0.1.0"
