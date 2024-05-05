@@ -9,3 +9,9 @@ Or `brew tap burnt-labs/xion` and then `brew install <formula>`.
 ## Documentation
 
 `brew help`, `man brew` or check [Homebrew's documentation](https://docs.brew.sh).
+
+## Linting
+
+```bash
+$ brew style burnt-labs/xion --fix
+```
