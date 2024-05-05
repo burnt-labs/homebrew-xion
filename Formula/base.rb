@@ -12,6 +12,10 @@ class XiondBase < Formula
   end
 
   def install
+    go_bin = which("go") || Formula["go"].opt_bin
+    raise "Go is not installed. Please install Go and try again." if go_bin.nil?
+    ENV.prepend_path "PATH", go_bin
+    
     wasm_version = `go list -m github.com/CosmWasm/wasmvm | cut -d ' ' -f 2`.strip
     libwasmvm_suffix = determine_libwasmvm_suffix
     libwasmvm_url = "https://github.com/CosmWasm/wasmvm/releases/download/#{wasm_version}/libwasmvm.#{libwasmvm_suffix}"
