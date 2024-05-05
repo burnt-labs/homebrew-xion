@@ -1,14 +1,15 @@
-class XiondAT020 < Formula
+class XiondBase < Formula
   desc "The Generalized Blockchain Abstraction Layer"
   homepage "https://burnt.com"
-
-  XION_VERSION = "v0.2.0"
-  url "https://github.com/burnt-labs/xion/archive/refs/tags/#{XION_VERSION}.tar.gz"
-  sha256 "8ec9229e3b76d4449852ecde698afdc4a504d740a03e1a71c92356811f26a625"
   license "MIT"
 
   depends_on "go"
   depends_on "make"
+
+  def self.init(version, sha256)
+    url "https://github.com/burnt-labs/xion/archive/refs/tags/v#{version}.tar.gz"
+    sha256 sha256
+  end
 
   def install
     wasm_version = `go list -m github.com/CosmWasm/wasmvm | cut -d ' ' -f 2`.strip
@@ -27,10 +28,8 @@ class XiondAT020 < Formula
     lib.install libwasmvm_file
 
     if OS.mac?
-      # Dynamic linking on macOS
       system "make", "install"
     else
-      # Apply static linking for Linux
       ENV["LINK_STATICALLY"] = "true"
       ENV["LDFLAGS"] = "-linkmode external -extldflags '-static'"
       system "make", "install"
