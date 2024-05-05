@@ -1,5 +1,5 @@
 class XiondBase < Formula
-  desc "The Generalized Blockchain Abstraction Layer"
+  desc "Generalized Blockchain Abstraction Layer"
   homepage "https://burnt.com"
   license "MIT"
 
