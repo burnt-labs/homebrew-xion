@@ -1,12 +1,14 @@
+# frozen_string_literal: true
+
 class XiondBase < Formula
   desc "Generalized Blockchain Abstraction Layer"
   homepage "https://burnt.com"
   license "MIT"
 
+  depends_on "git"
   depends_on "go"
   depends_on "make"
-  depends_on "git"
-  
+
   def self.init(version, sha256)
     url "https://github.com/burnt-labs/xion/archive/refs/tags/v#{version}.tar.gz"
     sha256 sha256
@@ -14,13 +16,13 @@ class XiondBase < Formula
 
   def install
     # Homebrew forces us to download a tarball;
-    # so for `xiond version` to work, we need nuke buildpath and clone the repo to get tags
+    # So for `xiond version` to work, we need to fetch tags ie. nuke buildpath and clone the repo
     Dir.chdir("/tmp") do
-      system "rm", "-rf", buildpath
-      system "mkdir", "-p", buildpath
+      remove_dir(buildpath, true)
+      Dir.mkdir(buildpath)
       system "git", "clone", "--depth", "1", "--branch", "v#{version}", "https://github.com/burnt-labs/xion.git", buildpath
-    end 
-    
+    end
+
     # Change back to buildpath and perform installation
     Dir.chdir(buildpath) do
       setup_go_environment
@@ -33,6 +35,7 @@ class XiondBase < Formula
   def setup_go_environment
     go_bin = which("go") || Formula["go"].opt_bin
     raise "Go is not installed. Please install Go and try again." if go_bin.nil?
+
     ENV.prepend_path "PATH", go_bin
   end
 
@@ -52,7 +55,7 @@ class XiondBase < Formula
   def verify_checksum(file)
     checksum_expected = `grep '#{File.basename(file)}' #{buildpath}/checksums.txt | cut -d ' ' -f 1`.strip
     checksum_actual = `shasum -a 256 #{file} | cut -d ' ' -f 1`.strip
-    odie "SHA256 mismatch for the downloaded libwasmvm file!" unless checksum_actual == checksum_expected
+    odie "SHA256 mismatch for the downloaded libwasmvm file!" if checksum_actual != checksum_expected
   end
 
   def install_libwasmvm
@@ -60,21 +63,18 @@ class XiondBase < Formula
   end
 
   def compile_and_install_xiond
-    if OS.mac?
-      system "make", "install"
-    else
+    unless OS.mac?
       ENV["LINK_STATICALLY"] = "true"
       ENV["LDFLAGS"] = "-linkmode external -extldflags '-static'"
-      system "make", "install"
     end
-    bin.install "#{ENV["GOPATH"]}/bin/xiond"
+    system "make", "install"
+    bin.install "#{ENV.fetch("GOPATH", nil)}/bin/xiond"
   end
 
   def determine_libwasmvm_suffix
-    case
-    when OS.mac?
+    if OS.mac?
       "dylib"
-    when OS.linux?
+    elsif OS.linux?
       if Hardware::CPU.intel?
         "muslc.x86_64.a"
       elsif Hardware::CPU.arm?
