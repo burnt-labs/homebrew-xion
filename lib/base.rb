@@ -59,7 +59,10 @@ class XiondBase < Formula
   end
 
   def install_libwasmvm
-    lib.install "#{buildpath}/libwasmvm.#{determine_libwasmvm_suffix}"
+    libwasmvm_suffix = determine_libwasmvm_suffix
+    libwasmvm_file = "#{buildpath}/libwasmvm.#{libwasmvm_suffix}"
+    
+    lib.install libwasmvm_file
   end
 
   def compile_and_install_xiond
@@ -67,8 +70,13 @@ class XiondBase < Formula
       ENV["LINK_STATICALLY"] = "true"
       ENV["LDFLAGS"] = "-linkmode external -extldflags '-static'"
     end
+
     system "make", "install"
     bin.install "#{ENV.fetch("GOPATH", nil)}/bin/xiond"
+    
+    if OS.mac?
+      system "install_name_tool", "-add_rpath", HOMEBREW_PREFIX/"lib", "#{bin}/xiond"
+    end
   end
 
   def determine_libwasmvm_suffix
