@@ -57,7 +57,8 @@ class XiondBase < Formula
   def verify_checksum(file)
     checksum_expected = `grep '#{File.basename(file)}' #{buildpath}/checksums.txt | cut -d ' ' -f 1`.strip
     checksum_actual = `shasum -a 256 #{file} | cut -d ' ' -f 1`.strip
-    odie "SHA256 mismatch for the downloaded libwasmvm file!" if checksum_actual != checksum_expected
+    diewith = "SHA256 mismatch in #{file}! Expected: #{checksum_expected}, Actual: #{checksum_actual}"
+    odie diewith if checksum_actual != checksum_expected
   end
 
   def install_libwasmvm
