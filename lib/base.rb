@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "macho" # Ensure ruby-macho is required
+
 class XiondBase < Formula
   desc "Generalized Blockchain Abstraction Layer"
   homepage "https://xion.burnt.com"
@@ -61,7 +63,7 @@ class XiondBase < Formula
   def install_libwasmvm
     libwasmvm_suffix = determine_libwasmvm_suffix
     libwasmvm_file = "#{buildpath}/libwasmvm.#{libwasmvm_suffix}"
-    
+
     lib.install libwasmvm_file
   end
 
@@ -73,10 +75,10 @@ class XiondBase < Formula
 
     system "make", "install"
     bin.install "#{ENV.fetch("GOPATH", nil)}/bin/xiond"
-    
-    if OS.mac?
-      system "install_name_tool", "-add_rpath", HOMEBREW_PREFIX/"lib", "#{bin}/xiond"
-    end
+
+    return unless OS.mac?
+
+    MachO::Tools.add_rpath("#{bin}/xiond", "#{HOMEBREW_PREFIX}/lib")
   end
 
   def determine_libwasmvm_suffix
