@@ -1,5 +1,5 @@
 require_relative "../lib/base"
 
 class XiondAT300 < XiondBase
-  init "3.0.0", "9ebeb82030deaa16498866a3be0459da3a724e300e82b390ef86e1d6617c4d95"
+  init "3.0.0", "2a35fb37db223344fcbb77212bcab84db14f3665a1d81133c0748567e66b15a4"
 end
