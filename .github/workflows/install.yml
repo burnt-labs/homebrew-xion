@@ -39,6 +39,8 @@ jobs:
 
       - name: Install Xiond
         run: |
+          brew tap burnt-labs/xion
+          
           if [ "${{ matrix.version }}" == "null" ]; then
             brew install xiond
           else
