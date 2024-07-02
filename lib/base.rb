@@ -2,7 +2,7 @@
 
 class XiondBase < Formula
   desc "Generalized Blockchain Abstraction Layer"
-  homepage "https://burnt.com"
+  homepage "https://xion.burnt.com"
   license "MIT"
 
   depends_on "git"
@@ -15,8 +15,8 @@ class XiondBase < Formula
   end
 
   def install
-    # Homebrew forces us to download a tarball;
-    # So for `xiond version` to work, we need to fetch tags ie. nuke buildpath and clone the repo
+    # Homebrew forces us to download a tarball; this kills the git information
+    # So for `xiond version` to work after build, we need to fetch tags ie. nuke buildpath and clone the repo
     Dir.chdir("/tmp") do
       remove_dir(buildpath, true)
       Dir.mkdir(buildpath)
