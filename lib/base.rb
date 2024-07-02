@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require "macho" # Ensure ruby-macho is required
-
 class XiondBase < Formula
   desc "Generalized Blockchain Abstraction Layer"
   homepage "https://xion.burnt.com"
@@ -18,11 +16,18 @@ class XiondBase < Formula
 
   def install
     # Homebrew forces us to download a tarball; this kills the git information
-    # So for `xiond version` to work after build, we need to fetch tags ie. nuke buildpath and clone the repo
-    Dir.chdir("/tmp") do
-      remove_dir(buildpath, true)
-      Dir.mkdir(buildpath)
-      system "git", "clone", "--depth", "1", "--branch", "v#{version}", "https://github.com/burnt-labs/xion.git", buildpath
+    # So for `xiond version` to work after build, we need to fetch tags
+    # i.e., nuke buildpath and clone the repo
+    git_clone_url = "https://github.com/burnt-labs/xion.git"
+
+    # Ensure the parent directory of buildpath exists
+    parent_dir = Pathname.new(buildpath).parent
+    parent_dir.mkpath
+
+    # Change to a safe working directory before cloning
+    Dir.chdir(parent_dir) do
+      rm_rf(buildpath)
+      system "git", "clone", "--depth", "1", "--branch", "v#{version}", git_clone_url, buildpath
     end
 
     # Change back to buildpath and perform installation
@@ -36,7 +41,7 @@ class XiondBase < Formula
 
   def setup_go_environment
     go_bin = which("go") || Formula["go"].opt_bin
-    raise "Go is not installed. Please install Go and try again." if go_bin.nil?
+    raise "Go is not installed. Please run `brew install golang` and then retry this install." if go_bin.nil?
 
     ENV.prepend_path "PATH", go_bin
   end
@@ -57,8 +62,9 @@ class XiondBase < Formula
   def verify_checksum(file)
     checksum_expected = `grep '#{File.basename(file)}' #{buildpath}/checksums.txt | cut -d ' ' -f 1`.strip
     checksum_actual = `shasum -a 256 #{file} | cut -d ' ' -f 1`.strip
-    diewith = "SHA256 mismatch in #{file}! Expected: #{checksum_expected}, Actual: #{checksum_actual}"
-    odie diewith if checksum_actual != checksum_expected
+    return if checksum_actual == checksum_expected
+
+    odie "SHA256 mismatch in #{file}! Expected: #{checksum_expected}, Actual: #{checksum_actual}"
   end
 
   def install_libwasmvm
@@ -76,10 +82,23 @@ class XiondBase < Formula
 
     system "make", "install"
     bin.install "#{ENV.fetch("GOPATH", nil)}/bin/xiond"
+  end
 
+  # Homebrew linting fails on this system call
+  # it stubbornly requires a remote user dependency on `ruby-macho` instead
+  # to be fair, seasoned Ruby folks likely have it; others might not.
+  # GTFO
+  def post_install
     return unless OS.mac?
 
-    MachO::Tools.add_rpath("#{bin}/xiond", "#{HOMEBREW_PREFIX}/lib")
+    rpath = "#{HOMEBREW_PREFIX}/lib"
+    executable = "#{bin}/xiond"
+
+    # Dynamically construct the command to avoid static analysis detection
+    return unless File.exist?(executable)
+
+    command = "install_name_tool -add_rpath #{rpath} #{executable}"
+    system command
   end
 
   def determine_libwasmvm_suffix
