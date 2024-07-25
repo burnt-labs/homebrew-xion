@@ -64,7 +64,9 @@ jobs:
           
           brew tap burnt-labs/xion
           brew install go
-
+          brew install gcc
+          brew install hidapi
+          
           echo "Matrix OS: ${{ matrix.os }}"          
           echo "Matrix version: ${{ matrix.version }}"
           
