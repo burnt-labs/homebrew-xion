@@ -75,11 +75,6 @@ class XiondBase < Formula
   end
 
   def compile_and_install_xiond
-    unless OS.mac?
-      ENV["LINK_STATICALLY"] = "true"
-      ENV["LDFLAGS"] = "-linkmode external -extldflags '-static'"
-    end
-
     system "make", "install"
     bin.install "#{ENV.fetch("GOPATH", nil)}/bin/xiond"
   end
