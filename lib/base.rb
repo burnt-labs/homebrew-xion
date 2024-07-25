@@ -47,7 +47,7 @@ class XiondBase < Formula
   end
 
   def fetch_and_verify_libwasmvm
-    wasm_version = `go list -m github.com/CosmWasm/wasmvm | cut -d ' ' -f 2`.strip
+    wasm_version = `go list -m -f '{{.Version}}' github.com/CosmWasm/wasmvm`.strip
     libwasmvm_suffix = determine_libwasmvm_suffix
     libwasmvm_url = "https://github.com/CosmWasm/wasmvm/releases/download/#{wasm_version}/libwasmvm.#{libwasmvm_suffix}"
     libwasmvm_file = "#{buildpath}/libwasmvm.#{libwasmvm_suffix}"
@@ -105,16 +105,30 @@ class XiondBase < Formula
     if OS.mac?
       "dylib"
     elsif OS.linux?
-      if Hardware::CPU.intel?
-        "muslc.x86_64.a"
-      elsif Hardware::CPU.arm?
-        "muslc.aarch64.a"
+      if alpine_linux?
+        if Hardware::CPU.intel?
+          "muslc.x86_64.a"
+        elsif Hardware::CPU.arm?
+          "muslc.aarch64.a"
+        else
+          raise "Unsupported architecture: #{Hardware::CPU.arch}"
+        end
       else
-        raise "Unsupported architecture: #{Hardware::CPU.arch}"
+        if Hardware::CPU.intel?
+          "x86_64.so"
+        elsif Hardware::CPU.arm?
+          "aarch64.so"
+        else
+          raise "Unsupported architecture: #{Hardware::CPU.arch}"
+        end
       end
     else
       raise "Unsupported OS: #{OS::NAME}"
     end
+  end
+
+  def alpine_linux?
+    File.exist?('/etc/alpine-release')
   end
 
   test do
