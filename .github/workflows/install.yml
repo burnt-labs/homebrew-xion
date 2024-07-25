@@ -59,6 +59,7 @@ jobs:
         run: |
           if [[ "${{ matrix.os }}" == "ubuntu-latest" ]]; then
             export PATH="/home/linuxbrew/.linuxbrew/bin:$PATH"
+            export LEDGER_ENABLED=false
             echo "PATH: $PATH"
           fi
           
