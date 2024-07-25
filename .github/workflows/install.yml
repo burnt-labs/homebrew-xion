@@ -72,3 +72,5 @@ jobs:
           else
             brew install xiond@${{ matrix.version }}
           fi
+          
+          xiond version --long
