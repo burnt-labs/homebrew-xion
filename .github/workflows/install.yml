@@ -54,22 +54,25 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y build-essential curl file git
           /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-          echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> $GITHUB_ENV
-          echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> ~/.bashrc
-
-      - name: Ensure Homebrew is in PATH (Linux)
-        if: matrix.os == 'ubuntu-latest'
-        run: |
-          echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> $GITHUB_ENV
 
       - name: Install Xiond
         run: |
+          if [[ "${{ matrix.os }}" == "ubuntu-latest" ]]; then
+            export PATH="/home/linuxbrew/.linuxbrew/bin:$PATH"
+            echo "PATH: $PATH"
+          fi
+          
           brew tap burnt-labs/xion
           brew install go
+
+          echo "Matrix OS: ${{ matrix.os }}"          
+          echo "Matrix version: ${{ matrix.version }}"
           
           if [[ "${{ matrix.version }}" == "null" ]]; then
+            echo "Installing latest version of xiond"
             brew install xiond
           else
+            echo "Installing xiond version ${{ matrix.version }}"
             brew install xiond@${{ matrix.version }}
           fi
           
