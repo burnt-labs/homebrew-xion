@@ -1,0 +1,8 @@
+services:
+
+  ubuntu:
+    image: burnt-labs/brew
+    build:
+      context: .docker
+      dockerfile: Dockerfile
+    platform: linux/amd64

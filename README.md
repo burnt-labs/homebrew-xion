@@ -1,14 +1,19 @@
 # homebrew-xion
 
-## How do I install these formulae?
+Homebrew formula for the Xion Daemon
 
-`brew install burnt-labs/xion/<formula>`
+## Install
 
-Or `brew tap burnt-labs/xion` and then `brew install <formula>`.
+```bash
+$ brew tap burnt-labs/xion
+$ brew install xiond
+```
 
-## Documentation
+## Testing
 
-`brew help`, `man brew` or check [Homebrew's documentation](https://docs.brew.sh).
+```bash
+$ docker compose up ubuntu
+```
 
 ## Linting
 
