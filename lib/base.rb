@@ -47,7 +47,7 @@ class XiondBase < Formula
   end
 
   def fetch_and_verify_libwasmvm
-    wasm_version = `go list -m -f '{{.Version}}' github.com/CosmWasm/wasmvm`.strip
+    wasm_version = get_wasm_version
     libwasmvm_suffix = determine_libwasmvm_suffix
     libwasmvm_url = "https://github.com/CosmWasm/wasmvm/releases/download/#{wasm_version}/libwasmvm.#{libwasmvm_suffix}"
     libwasmvm_file = "#{buildpath}/libwasmvm.#{libwasmvm_suffix}"
@@ -57,6 +57,16 @@ class XiondBase < Formula
     system "curl", "-Lo", "#{buildpath}/checksums.txt", checksums_url
 
     verify_checksum(libwasmvm_file)
+  end
+
+  def get_wasm_version
+    go_mod_content = File.read('go.mod')
+    wasmvm_dependency_line = go_mod_content.lines.find { |line| line.include?('github.com/CosmWasm/wasmvm') }
+    if wasmvm_dependency_line
+      wasmvm_dependency_line.split[1] # This extracts the version from the go.mod file
+    else
+      raise 'wasmvm dependency not found in go.mod'
+    end
   end
 
   def verify_checksum(file)
@@ -110,14 +120,12 @@ class XiondBase < Formula
         else
           raise "Unsupported architecture: #{Hardware::CPU.arch}"
         end
+      elsif Hardware::CPU.intel?
+        "x86_64.so"
+      elsif Hardware::CPU.arm?
+        "aarch64.so"
       else
-        if Hardware::CPU.intel?
-          "x86_64.so"
-        elsif Hardware::CPU.arm?
-          "aarch64.so"
-        else
-          raise "Unsupported architecture: #{Hardware::CPU.arch}"
-        end
+        raise "Unsupported architecture: #{Hardware::CPU.arch}"
       end
     else
       raise "Unsupported OS: #{OS::NAME}"
@@ -125,7 +133,7 @@ class XiondBase < Formula
   end
 
   def alpine_linux?
-    File.exist?('/etc/alpine-release')
+    File.exist?("/etc/alpine-release")
   end
 
   test do

@@ -13,35 +13,58 @@ jobs:
   install:
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
         os: [macos-latest, ubuntu-latest]
         version:
-          - 'null'
-          - '0.1.0'
-          - '0.3.2'
-          - '0.3.3'
-          - '0.3.4'
-          - '0.3.7'
-          - '0.3.8'
-          - '0.3.9'
-          - '1.0.0'
-          - '2.0.0'
-          - '3.0.0'
-          - '3.1.0'
-          - '4.0.0'
-          - '5.0.0'
-          - '6.0.0'
-          - '7.0.0'
-          - '8.0.0'
-          - '8.0.1'
-          - '9.0.0'
+          - version: "null"
+            go_version: "1.21"
+          - version: "0.1.0"
+            go_version: "1.21"
+          - version: "0.3.2"
+            go_version: "1.21"
+          - version: "0.3.3"
+            go_version: "1.21"
+          - version: "0.3.4"
+            go_version: "1.21"
+          - version: "0.3.7"
+            go_version: "1.21"
+          - version: "0.3.8"
+            go_version: "1.21"
+          - version: "0.3.9"
+            go_version: "1.21"
+          - version: "1.0.0"
+            go_version: "1.21"
+          - version: "2.0.0"
+            go_version: "1.21"
+          - version: "3.0.0"
+            go_version: "1.21"
+          - version: "3.1.0"
+            go_version: "1.21"
+          - version: "4.0.0"
+            go_version: "1.21"
+          - version: "5.0.0"
+            go_version: "1.21"
+          - version: "6.0.0"
+            go_version: "1.21"
+          - version: "7.0.0"
+            go_version: "1.21"
+          - version: "8.0.0"
+            go_version: "1.21"
+          - version: "8.0.1"
+            go_version: "1.21"
+          - version: "9.0.0"
+            go_version: "1.21"
+          - version: "9.0.1"
+            go_version: "1.21"
+          - version: "10.0.0"
+            go_version: "1.22"
+          - version: "11.0.1"
+            go_version: "1.22"
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          submodules: 'recursive'
 
       - name: Set up Homebrew (macOS)
         if: matrix.os == 'macos-latest'
@@ -57,24 +80,26 @@ jobs:
 
       - name: Install Xiond
         run: |
+          echo "Matrix OS: ${{ matrix.os }}"          
+          echo "Matrix version: ${{ matrix.version.version }}"
+          echo "Matrix go version: ${{ matrix.version.go_version }}"
+
+
           if [[ "${{ matrix.os }}" == "ubuntu-latest" ]]; then
-            export PATH="/home/linuxbrew/.linuxbrew/bin:$PATH"
+            eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
             export LEDGER_ENABLED=false
             echo "PATH: $PATH"
           fi
-          
+
+          brew install go@${{ matrix.version.go_version }}
+          brew link --force --overwrite go@${{ matrix.version.go_version }}
           brew tap burnt-labs/xion
-          brew install go
-          
-          echo "Matrix OS: ${{ matrix.os }}"          
-          echo "Matrix version: ${{ matrix.version }}"
-          
-          if [[ "${{ matrix.version }}" == "null" ]]; then
+          if [[ "${{ matrix.version.version }}" == "null" ]]; then
             echo "Installing latest version of xiond"
             brew install xiond
           else
-            echo "Installing xiond version ${{ matrix.version }}"
-            brew install xiond@${{ matrix.version }}
+            echo "Installing xiond version ${{ matrix.version.version }}"
+            brew install xiond@${{ matrix.version.version }}
           fi
-          
+
           xiond version --long
