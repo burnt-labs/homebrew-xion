@@ -125,7 +125,7 @@ class XiondBase < Formula
   end
 
   def alpine_linux?
-    File.exist?('/etc/alpine-release')
+    File.exist?("/etc/alpine-release")
   end
 
   test do
