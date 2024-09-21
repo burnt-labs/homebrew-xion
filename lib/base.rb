@@ -110,7 +110,7 @@ class XiondBase < Formula
         else
           raise "Unsupported architecture: #{Hardware::CPU.arch}"
         end
-      elif Hardware::CPU.intel?
+      elsif Hardware::CPU.intel?
         "x86_64.so"
       elsif Hardware::CPU.arm?
         "aarch64.so"
