@@ -47,7 +47,7 @@ class XiondBase < Formula
   end
 
   def fetch_and_verify_libwasmvm
-    wasm_version = `go list -m -f '{{.Version}}' github.com/CosmWasm/wasmvm`.strip
+    wasm_version = `go list -m $(grep "github.com/CosmWasm/wasmvm" go.mod | cut -d " " -f 1) | cut -d " " -f 2`.strip
     libwasmvm_suffix = determine_libwasmvm_suffix
     libwasmvm_url = "https://github.com/CosmWasm/wasmvm/releases/download/#{wasm_version}/libwasmvm.#{libwasmvm_suffix}"
     libwasmvm_file = "#{buildpath}/libwasmvm.#{libwasmvm_suffix}"
