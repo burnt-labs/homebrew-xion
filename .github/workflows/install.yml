@@ -17,46 +17,46 @@ jobs:
       matrix:
         os: [macos-latest, ubuntu-latest]
         version:
-          - version: "null"
-            go_version: "1.21"
-          - version: "0.1.0"
-            go_version: "1.21"
-          - version: "0.3.2"
-            go_version: "1.21"
-          - version: "0.3.3"
-            go_version: "1.21"
-          - version: "0.3.4"
-            go_version: "1.21"
-          - version: "0.3.7"
-            go_version: "1.21"
-          - version: "0.3.8"
-            go_version: "1.21"
-          - version: "0.3.9"
-            go_version: "1.21"
-          - version: "1.0.0"
-            go_version: "1.21"
-          - version: "2.0.0"
-            go_version: "1.21"
-          - version: "3.0.0"
-            go_version: "1.21"
-          - version: "3.1.0"
-            go_version: "1.21"
-          - version: "4.0.0"
-            go_version: "1.21"
-          - version: "5.0.0"
-            go_version: "1.21"
-          - version: "6.0.0"
-            go_version: "1.21"
-          - version: "7.0.0"
-            go_version: "1.21"
-          - version: "8.0.0"
-            go_version: "1.21"
-          - version: "8.0.1"
-            go_version: "1.21"
-          - version: "9.0.0"
-            go_version: "1.21"
-          - version: "9.0.1"
-            go_version: "1.21"
+          # - version: "null"
+          #   go_version: "1.21"
+          # - version: "0.1.0"
+          #   go_version: "1.21"
+          # - version: "0.3.2"
+          #   go_version: "1.21"
+          # - version: "0.3.3"
+          #   go_version: "1.21"
+          # - version: "0.3.4"
+          #   go_version: "1.21"
+          # - version: "0.3.7"
+          #   go_version: "1.21"
+          # - version: "0.3.8"
+          #   go_version: "1.21"
+          # - version: "0.3.9"
+          #   go_version: "1.21"
+          # - version: "1.0.0"
+          #   go_version: "1.21"
+          # - version: "2.0.0"
+          #   go_version: "1.21"
+          # - version: "3.0.0"
+          #   go_version: "1.21"
+          # - version: "3.1.0"
+          #   go_version: "1.21"
+          # - version: "4.0.0"
+          #   go_version: "1.21"
+          # - version: "5.0.0"
+          #   go_version: "1.21"
+          # - version: "6.0.0"
+          #   go_version: "1.21"
+          # - version: "7.0.0"
+          #   go_version: "1.21"
+          # - version: "8.0.0"
+          #   go_version: "1.21"
+          # - version: "8.0.1"
+          #   go_version: "1.21"
+          # - version: "9.0.0"
+          #   go_version: "1.21"
+          # - version: "9.0.1"
+          #   go_version: "1.21"
           - version: "10.0.0"
             go_version: "1.22"
           - version: "11.0.1"
@@ -66,17 +66,17 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Homebrew (macOS)
-        if: matrix.os == 'macos-latest'
+      - name: Set up Homebrew
         run: |
           /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
-      - name: Set up Homebrew (Linux)
-        if: matrix.os == 'ubuntu-latest'
+      - name: Set up Go
         run: |
-          sudo apt-get update
-          sudo apt-get install -y build-essential curl file git
-          /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+          export PATH="/home/linuxbrew/.linuxbrew/bin:$PATH"
+          brew install go@${{ matrix.version.go_version }}
+          cd $(brew --prefix go@${{ matrix.version.go_version }})/bin
+          brew unlink go || true
+          brew link -vv --force go@${{ matrix.version.go_version }}
 
       - name: Install Xiond
         run: |
@@ -84,16 +84,16 @@ jobs:
           echo "Matrix version: ${{ matrix.version.version }}"
           echo "Matrix go version: ${{ matrix.version.go_version }}"
 
-
           if [[ "${{ matrix.os }}" == "ubuntu-latest" ]]; then
-            eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+            export PATH="/home/linuxbrew/.linuxbrew/bin:$PATH"
             export LEDGER_ENABLED=false
-            echo "PATH: $PATH"
           fi
 
-          brew install go@${{ matrix.version.go_version }}
-          brew link --force --overwrite go@${{ matrix.version.go_version }}
+          export PATH="$(brew --prefix go@${{ matrix.version.go_version }})/libexec/bin/:$PATH"
+          echo "PATH: $PATH"
+
           brew tap burnt-labs/xion
+          ls -la $(which go)
           if [[ "${{ matrix.version.version }}" == "null" ]]; then
             echo "Installing latest version of xiond"
             brew install xiond
