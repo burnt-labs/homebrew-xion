@@ -74,9 +74,11 @@ jobs:
         run: |
           export PATH="/home/linuxbrew/.linuxbrew/bin:$PATH"
           brew install go@${{ matrix.version.go_version }}
-          cd $(brew --prefix go@${{ matrix.version.go_version }})/bin
-          brew unlink go || true
-          brew link -vv --force go@${{ matrix.version.go_version }}
+          sudo ln -fs $(brew --prefix go@${{ matrix.version.go_version }})/libexec/bin/go $(brew --prefix)/bin/go
+          sudo ln -fs $(brew --prefix go@${{ matrix.version.go_version }})/libexec/bin/go /usr/local/bin/go
+          if [[ "${{ matrix.os }}" == "ubuntu-latest" ]]; then
+            sudo ln -fs $(brew --prefix go@${{ matrix.version.go_version }})/libexec/bin/go /usr/bin/go
+          fi
 
       - name: Install Xiond
         run: |
@@ -89,11 +91,11 @@ jobs:
             export LEDGER_ENABLED=false
           fi
 
-          export PATH="$(brew --prefix go@${{ matrix.version.go_version }})/libexec/bin/:$PATH"
+          export PATH="${GOROOT}/libexec/bin/:$PATH"
           echo "PATH: $PATH"
+          ls -la $(which go)
 
           brew tap burnt-labs/xion
-          ls -la $(which go)
           if [[ "${{ matrix.version.version }}" == "null" ]]; then
             echo "Installing latest version of xiond"
             brew install xiond
