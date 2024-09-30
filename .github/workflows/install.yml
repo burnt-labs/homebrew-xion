@@ -17,8 +17,6 @@ jobs:
       matrix:
         os: [macos-latest, ubuntu-latest]
         version:
-          # - version: "null"
-          #   go_version: "1.21"
           # - version: "0.1.0"
           #   go_version: "1.21"
           # - version: "0.3.2"
@@ -60,6 +58,8 @@ jobs:
           - version: "10.0.0"
             go_version: "1.22"
           - version: "11.0.1"
+            go_version: "1.22"
+          - version: "null"
             go_version: "1.22"
 
     steps:
