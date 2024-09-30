@@ -85,9 +85,10 @@ class XiondBase < Formula
   end
 
   def compile_and_install_xiond
+    path = ENV["PATH"]
     ledger_enabled = ENV["LEDGER_ENABLED"] == "true"
     link_statically = ENV["LINK_STATICALLY"] == "true"
-    system "make", "install", "LEDGER_ENABLED=#{ledger_enabled}", "LINK_STATICALLY=#{link_statically}"
+    system "make", "install", "PATH=#{path}", "LEDGER_ENABLED=#{ledger_enabled}", "LINK_STATICALLY=#{link_statically}"
     bin.install "#{ENV.fetch("GOPATH", nil)}/bin/xiond"
   end
 
