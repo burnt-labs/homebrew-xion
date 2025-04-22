@@ -85,7 +85,7 @@ class XiondAT${SHORT_RELEASE} < Formula
 
         def install
           if File.exist?("xiond-linux-amd64")  
-            mv "xiond-linux-arm64", "xiond"
+            mv "xiond-linux-amd64", "xiond"
           end
           bin.install "xiond"
         end
@@ -97,8 +97,8 @@ class XiondAT${SHORT_RELEASE} < Formula
         sha256 "$arm64_linux_sha256"
 
         def install
-          if File.exist?("xiond-linux-amd64")  
-            mv "xiond-linux-amd64", "xiond"
+          if File.exist?("xiond-linux-arm64")  
+            mv "xiond-linux-arm64", "xiond"
           end
           bin.install "xiond"
         end
