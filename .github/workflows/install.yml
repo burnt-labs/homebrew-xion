@@ -59,7 +59,7 @@ jobs:
           - "null"
 
     env:
-      GOVERSION: 1.23
+      HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK: 1
 
     steps:
       - name: Checkout repository
