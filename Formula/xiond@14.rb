@@ -5,21 +5,21 @@
 class XiondAT14 < Formula
   desc "Xiond is the Cosmos SDK based blockchain cli/daemon for the Xion Network."
   homepage "https://xion.burnt.com/"
-  version "14.0.1"
+  version "14.1.2"
   license "Apache2.0"
 
   on_macos do
     if Hardware::CPU.intel?
-      url "https://github.com/burnt-labs/xion/releases/download/v14.0.1/xiond_14.0.1_darwin_amd64.tar.gz"
-      sha256 "7297cbe4cec16fd0d0172ecf899e76853df7dcd8bca4980d98af8dcd03b0589e"
+      url "https://github.com/burnt-labs/xion/releases/download/v14.1.2/xiond_14.1.2_darwin_amd64.tar.gz"
+      sha256 "df87b444eb92c85d5cb1102b9f66be6b2e0277935cd2f4eec21c95e9fb7d41fe"
 
       def install
         bin.install "xiond"
       end
     end
     if Hardware::CPU.arm?
-      url "https://github.com/burnt-labs/xion/releases/download/v14.0.1/xiond_14.0.1_darwin_arm64.tar.gz"
-      sha256 "6ae07c65baeec2e3aa147bc3b1dfb593d752a0fa8808129a0347419f70038ac7"
+      url "https://github.com/burnt-labs/xion/releases/download/v14.1.2/xiond_14.1.2_darwin_arm64.tar.gz"
+      sha256 "c5e8083deb16249aa7a65a0783785a5849d33ed46a0e7f9d3e15c8e65e6126be"
 
       def install
         bin.install "xiond"
@@ -29,15 +29,15 @@ class XiondAT14 < Formula
 
   on_linux do
     if Hardware::CPU.intel? and Hardware::CPU.is_64_bit?
-      url "https://github.com/burnt-labs/xion/releases/download/v14.0.1/xiond_14.0.1_linux_amd64.tar.gz"
-      sha256 "c4a29e968aee46774c4dd258917f6cfa443f9c852be6f05904a8e7822acfea30"
+      url "https://github.com/burnt-labs/xion/releases/download/v14.1.2/xiond_14.1.2_linux_amd64.tar.gz"
+      sha256 "302281ec47e8b40a4abb61851141d3b36dbbcb143bf2703cf7bcaeaae3cda1a4"
       def install
         bin.install "xiond"
       end
     end
     if Hardware::CPU.arm? and Hardware::CPU.is_64_bit?
-      url "https://github.com/burnt-labs/xion/releases/download/v14.0.1/xiond_14.0.1_linux_arm64.tar.gz"
-      sha256 "d58f95af578edb5ec8fcceae010e70df2d75bc7f5e3b7aef34369d09fd539fa7"
+      url "https://github.com/burnt-labs/xion/releases/download/v14.1.2/xiond_14.1.2_linux_arm64.tar.gz"
+      sha256 "f57d081b0e1847a602e0ca7baac5a5b1bc8bbaebc60b3627ea908fb6f78cf8e2"
       def install
         bin.install "xiond"
       end
