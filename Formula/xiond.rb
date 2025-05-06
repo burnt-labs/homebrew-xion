@@ -5,21 +5,21 @@
 class Xiond < Formula
   desc "Xiond is the Cosmos SDK based blockchain cli/daemon for the Xion Network."
   homepage "https://xion.burnt.com/"
-  version "18.0.0"
+  version "15.0.1"
   license "Apache2.0"
 
   on_macos do
     if Hardware::CPU.intel?
-      url "https://github.com/burnt-labs/xion/releases/download/v18.0.0/xiond_18.0.0_darwin_amd64.zip"
-      sha256 "bf8fa7743d7aab33396d9122ab3817224d41bbbcf410424c993b1d25911faee6"
+      url "https://github.com/burnt-labs/xion/releases/download/v15.0.1/xiond_15.0.1_darwin_amd64.tar.gz"
+      sha256 "a3bb3c3e0e1221867f8ed2c81f0f4709c4a9b415e2e6df24c7b7fddbe358b607"
 
       def install
         bin.install "xiond"
       end
     end
     if Hardware::CPU.arm?
-      url "https://github.com/burnt-labs/xion/releases/download/v18.0.0/xiond_18.0.0_darwin_arm64.zip"
-      sha256 "1f8799dc21ff348ca71e25864e12b1b07c2d9be66359eab9c420887178403d9d"
+      url "https://github.com/burnt-labs/xion/releases/download/v15.0.1/xiond_15.0.1_darwin_arm64.tar.gz"
+      sha256 "3b5a3422bcf7a703d23e6ede34ebe78ccc1e8e263fd43bfc70e7b02791ae98a0"
 
       def install
         bin.install "xiond"
@@ -28,25 +28,23 @@ class Xiond < Formula
   end
 
   on_linux do
-    if Hardware::CPU.intel?
-      if Hardware::CPU.is_64_bit?
-        url "https://github.com/burnt-labs/xion/releases/download/v18.0.0/xiond_18.0.0_linux_amd64.zip"
-        sha256 "361ff8194f0f2601fd8a0759eb218b27d62d236618ca7c623481c64ec7c85a8c"
-
-        def install
-          bin.install "xiond"
-        end
+    if Hardware::CPU.intel? and Hardware::CPU.is_64_bit?
+      url "https://github.com/burnt-labs/xion/releases/download/v15.0.1/xiond_15.0.1_linux_amd64.tar.gz"
+      sha256 "d2a7313a0eb3f8c7a04528f8558a96d17e68c64ff153915ad03c3f8d900a14b4"
+      def install
+        bin.install "xiond"
       end
     end
-    if Hardware::CPU.arm?
-      if Hardware::CPU.is_64_bit?
-        url "https://github.com/burnt-labs/xion/releases/download/v18.0.0/xiond_18.0.0_linux_arm64.zip"
-        sha256 "1f49577bd44ea2a4072d88e6934e124d44594489b76d33922c4a8803db08303c"
-
-        def install
-          bin.install "xiond"
-        end
+    if Hardware::CPU.arm? and Hardware::CPU.is_64_bit?
+      url "https://github.com/burnt-labs/xion/releases/download/v15.0.1/xiond_15.0.1_linux_arm64.tar.gz"
+      sha256 "54551afc2e865d1e5dd641932df84e36a28be8a2969f9fc79bee1cbcec48fb56"
+      def install
+        bin.install "xiond"
       end
     end
+  end
+
+  test do
+    system "#{bin}/xiond version"
   end
 end
