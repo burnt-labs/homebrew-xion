@@ -11,7 +11,7 @@ class XiondAT611 < Formula
   on_macos do
     if Hardware::CPU.intel?
       url "https://github.com/burnt-labs/xion/releases/download/v6.1.1/xiond_6.1.1_darwin_amd64.tar.gz"
-      sha256 "5a3402a82424bac2e81c059c92d97c497ec9304fddcfb84fdac346018e2a79af"
+      sha256 "c16bcec94f6965307d2996d07bd32c7ddb88cbc10411ef895a66afd4ba579004"
 
       def install
         bin.install "xiond"
@@ -19,7 +19,7 @@ class XiondAT611 < Formula
     end
     if Hardware::CPU.arm?
       url "https://github.com/burnt-labs/xion/releases/download/v6.1.1/xiond_6.1.1_darwin_arm64.tar.gz"
-      sha256 "90fbec0053f4b41795a14356fd9f09305698c46817e2cd1774d37093d83938aa"
+      sha256 "649a087f35b3abfdbb5afc60940922ec9caba8de2543c0b0a6442e854727be05"
 
       def install
         bin.install "xiond"
@@ -30,14 +30,14 @@ class XiondAT611 < Formula
   on_linux do
     if Hardware::CPU.intel? and Hardware::CPU.is_64_bit?
       url "https://github.com/burnt-labs/xion/releases/download/v6.1.1/xiond_6.1.1_linux_amd64.tar.gz"
-      sha256 "cfac446c715ce99cc63c4a95aee1b59b39dd2f2d3441db0f65e2123f9ead74cd"
+      sha256 "c09a1b90aba6701966b3b51684cf2217e9fd4fa5b9a7fd77d0321a0a243253e5"
       def install
         bin.install "xiond"
       end
     end
     if Hardware::CPU.arm? and Hardware::CPU.is_64_bit?
       url "https://github.com/burnt-labs/xion/releases/download/v6.1.1/xiond_6.1.1_linux_arm64.tar.gz"
-      sha256 "c7e0ea5bceb91374e833a74611f359862e507fb8fd74a9ac6f8ec8373e60e14c"
+      sha256 "f4823b1c8235f07f3a1fefc5ece2b68da44dcff652eca9225ffc30c0bbe6a2c7"
       def install
         bin.install "xiond"
       end
