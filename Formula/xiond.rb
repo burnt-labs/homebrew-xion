@@ -20,7 +20,7 @@ class Xiond < Formula
     if Hardware::CPU.arm?
       url "https://github.com/burnt-labs/xion/releases/download/v19.0.1/xiond_19.0.1_darwin_arm64.tar.gz"
       sha256 "9c2944de98c54f4e8517259d0782daca4c43900887b7d7c19044ba75b6e2976d"
-
+      
       def install
         bin.install "xiond"
       end
@@ -31,6 +31,7 @@ class Xiond < Formula
     if Hardware::CPU.intel? and Hardware::CPU.is_64_bit?
       url "https://github.com/burnt-labs/xion/releases/download/v19.0.1/xiond_19.0.1_linux_amd64.tar.gz"
       sha256 "5350ccf4fb83f086f772ceebd8a1c3788c2fa64ad1976d92052842e23a1977c3"
+      
       def install
         bin.install "xiond"
       end
@@ -38,6 +39,7 @@ class Xiond < Formula
     if Hardware::CPU.arm? and Hardware::CPU.is_64_bit?
       url "https://github.com/burnt-labs/xion/releases/download/v19.0.1/xiond_19.0.1_linux_arm64.tar.gz"
       sha256 "efed79d4b240c6edaa4488b54e7efcbff89313c0f0ed6e1682dab0f1d97315c2"
+      
       def install
         bin.install "xiond"
       end
