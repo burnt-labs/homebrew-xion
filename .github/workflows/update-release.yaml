@@ -51,7 +51,7 @@ jobs:
             # For push events (testing), use hardcoded test tag - CHANGE THIS FOR TESTING
             # Use an existing release tag like v21.0.1 for testing
             VERSION="v21.0.1"
-            TAG="v99.0.1"
+            TAG="v21.0.1"
           fi
           VERSION=${VERSION#v}
           MAJOR=$(echo $VERSION | cut -d. -f1)
@@ -135,8 +135,9 @@ jobs:
 
       - name: Create branch
         id: branch
+        #BRANCH="xiond-${{ steps.version.outputs.tag }}" #TODO replace 99.99.99 with the actual version
         run: |
-          BRANCH="xiond-${{ steps.version.outputs.tag }}"
+          BRANCH="xiond-99.99.99"
           git checkout -b "$BRANCH" || git checkout "$BRANCH"
           echo "branch=$BRANCH" >> $GITHUB_OUTPUT
 
