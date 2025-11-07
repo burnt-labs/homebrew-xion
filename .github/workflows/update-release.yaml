@@ -70,7 +70,7 @@ jobs:
             TAG="${{ github.event.inputs.tag_name }}"
           else
             # For push events (testing), use hardcoded test tag - CHANGE THIS FOR TESTING
-            TAG="v99.99.99"
+            TAG="v21.0.1"
           fi
           echo "Downloading checksums for tag: $TAG"
           gh release download "$TAG" \
