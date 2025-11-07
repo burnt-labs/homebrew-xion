@@ -49,8 +49,9 @@ jobs:
             TAG="${{ github.event.inputs.tag_name }}"
           else
             # For push events (testing), use hardcoded test tag - CHANGE THIS FOR TESTING
-            VERSION="v99.99.99"
-            TAG="v99.99.99"
+            # Use an existing release tag like v21.0.1 for testing
+            VERSION="v21.0.1"
+            TAG="v99.0.1"
           fi
           VERSION=${VERSION#v}
           MAJOR=$(echo $VERSION | cut -d. -f1)
@@ -64,19 +65,15 @@ jobs:
         run: |
           mkdir -p /tmp/release-assets
           cd /tmp/release-assets
-          if [ "${{ github.event_name }}" == "repository_dispatch" ]; then
-            TAG="${{ github.event.client_payload.tag_name }}"
-          elif [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
-            TAG="${{ github.event.inputs.tag_name }}"
-          else
-            # For push events (testing), use hardcoded test tag - CHANGE THIS FOR TESTING
-            TAG="v21.0.1"
-          fi
+          # Use the tag from the version step to ensure consistency
+          TAG="${{ steps.version.outputs.tag }}"
           echo "Downloading checksums for tag: $TAG"
           gh release download "$TAG" \
             --repo burnt-labs/xion \
             --pattern "xiond-*-checksums.txt" \
             --dir /tmp/release-assets
+          echo "Downloaded files:"
+          ls -la /tmp/release-assets/ || true
 
       - name: Extract SHA256 hashes from checksums file
         id: sha256
@@ -91,11 +88,27 @@ jobs:
             exit 1
           fi
           
+          echo "Using checksums file: $CHECKSUMS_FILE"
+          echo "Looking for version: ${{ steps.version.outputs.version }}"
+          echo "First 20 lines of checksums file:"
+          head -20 "$CHECKSUMS_FILE" || cat "$CHECKSUMS_FILE"
+          
           # Extract SHA256 hashes for each platform
-          DARWIN_AMD64_SHA=$(grep "xiond_${{ steps.version.outputs.version }}_darwin_amd64.tar.gz" "$CHECKSUMS_FILE" | awk '{print $1}')
-          DARWIN_ARM64_SHA=$(grep "xiond_${{ steps.version.outputs.version }}_darwin_arm64.tar.gz" "$CHECKSUMS_FILE" | awk '{print $1}')
-          LINUX_AMD64_SHA=$(grep "xiond_${{ steps.version.outputs.version }}_linux_amd64.tar.gz" "$CHECKSUMS_FILE" | awk '{print $1}')
-          LINUX_ARM64_SHA=$(grep "xiond_${{ steps.version.outputs.version }}_linux_arm64.tar.gz" "$CHECKSUMS_FILE" | awk '{print $1}')
+          SEARCH_PATTERN="xiond_${{ steps.version.outputs.version }}_darwin_amd64.tar.gz"
+          echo "Searching for pattern: $SEARCH_PATTERN"
+          DARWIN_AMD64_SHA=$(grep "$SEARCH_PATTERN" "$CHECKSUMS_FILE" | awk '{print $1}')
+          
+          SEARCH_PATTERN="xiond_${{ steps.version.outputs.version }}_darwin_arm64.tar.gz"
+          echo "Searching for pattern: $SEARCH_PATTERN"
+          DARWIN_ARM64_SHA=$(grep "$SEARCH_PATTERN" "$CHECKSUMS_FILE" | awk '{print $1}')
+          
+          SEARCH_PATTERN="xiond_${{ steps.version.outputs.version }}_linux_amd64.tar.gz"
+          echo "Searching for pattern: $SEARCH_PATTERN"
+          LINUX_AMD64_SHA=$(grep "$SEARCH_PATTERN" "$CHECKSUMS_FILE" | awk '{print $1}')
+          
+          SEARCH_PATTERN="xiond_${{ steps.version.outputs.version }}_linux_arm64.tar.gz"
+          echo "Searching for pattern: $SEARCH_PATTERN"
+          LINUX_ARM64_SHA=$(grep "$SEARCH_PATTERN" "$CHECKSUMS_FILE" | awk '{print $1}')
           
           # Verify all hashes were found
           if [ -z "$DARWIN_AMD64_SHA" ]; then
