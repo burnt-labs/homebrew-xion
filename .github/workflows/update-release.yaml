@@ -1,0 +1,271 @@
+name: Update Homebrew Formula
+
+on:
+  ####################################
+  # DELETE THIS TRIGGER
+  push: 
+    branches:
+      - feat/update-on-new-release
+  ####################################
+  repository_dispatch:
+    types: [homebrew-release-trigger]
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        required: true
+        type: string
+        description: The release tag name (e.g., v21.0.0)
+      release_name:
+        required: false
+        type: string
+        description: The release name
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update-homebrew:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout homebrew-xion
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Configure Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Extract version from tag
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" == "repository_dispatch" ]; then
+            VERSION="${{ github.event.client_payload.tag_name }}"
+            TAG="${{ github.event.client_payload.tag_name }}"
+          elif [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            VERSION="${{ github.event.inputs.tag_name }}"
+            TAG="${{ github.event.inputs.tag_name }}"
+          else
+            # For push events (testing), use hardcoded test tag - CHANGE THIS FOR TESTING
+            VERSION="v99.99.99"
+            TAG="v99.99.99"
+          fi
+          VERSION=${VERSION#v}
+          MAJOR=$(echo $VERSION | cut -d. -f1)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "major=$MAJOR" >> $GITHUB_OUTPUT
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+
+      - name: Download checksums file
+        env:
+          GH_TOKEN: ${{ secrets.BURNT_PAT_GITHUB_ACTIONS_TOKEN }}
+        run: |
+          mkdir -p /tmp/release-assets
+          cd /tmp/release-assets
+          if [ "${{ github.event_name }}" == "repository_dispatch" ]; then
+            TAG="${{ github.event.client_payload.tag_name }}"
+          elif [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            TAG="${{ github.event.inputs.tag_name }}"
+          else
+            # For push events (testing), use hardcoded test tag - CHANGE THIS FOR TESTING
+            TAG="v99.99.99"
+          fi
+          echo "Downloading checksums for tag: $TAG"
+          gh release download "$TAG" \
+            --repo burnt-labs/xion \
+            --pattern "xiond-*-checksums.txt" \
+            --dir /tmp/release-assets
+
+      - name: Extract SHA256 hashes from checksums file
+        id: sha256
+        run: |
+          set -e
+          cd /tmp/release-assets
+          
+          # Find the checksums file
+          CHECKSUMS_FILE=$(ls xiond-*-checksums.txt 2>/dev/null | head -n 1)
+          if [ -z "$CHECKSUMS_FILE" ]; then
+            echo "Error: checksums file not found"
+            exit 1
+          fi
+          
+          # Extract SHA256 hashes for each platform
+          DARWIN_AMD64_SHA=$(grep "xiond_${{ steps.version.outputs.version }}_darwin_amd64.tar.gz" "$CHECKSUMS_FILE" | awk '{print $1}')
+          DARWIN_ARM64_SHA=$(grep "xiond_${{ steps.version.outputs.version }}_darwin_arm64.tar.gz" "$CHECKSUMS_FILE" | awk '{print $1}')
+          LINUX_AMD64_SHA=$(grep "xiond_${{ steps.version.outputs.version }}_linux_amd64.tar.gz" "$CHECKSUMS_FILE" | awk '{print $1}')
+          LINUX_ARM64_SHA=$(grep "xiond_${{ steps.version.outputs.version }}_linux_arm64.tar.gz" "$CHECKSUMS_FILE" | awk '{print $1}')
+          
+          # Verify all hashes were found
+          if [ -z "$DARWIN_AMD64_SHA" ]; then
+            echo "Error: darwin_amd64 SHA256 not found in checksums file"
+            exit 1
+          fi
+          if [ -z "$DARWIN_ARM64_SHA" ]; then
+            echo "Error: darwin_arm64 SHA256 not found in checksums file"
+            exit 1
+          fi
+          if [ -z "$LINUX_AMD64_SHA" ]; then
+            echo "Error: linux_amd64 SHA256 not found in checksums file"
+            exit 1
+          fi
+          if [ -z "$LINUX_ARM64_SHA" ]; then
+            echo "Error: linux_arm64 SHA256 not found in checksums file"
+            exit 1
+          fi
+          
+          echo "darwin_amd64_sha=$DARWIN_AMD64_SHA" >> $GITHUB_OUTPUT
+          echo "darwin_arm64_sha=$DARWIN_ARM64_SHA" >> $GITHUB_OUTPUT
+          echo "linux_amd64_sha=$LINUX_AMD64_SHA" >> $GITHUB_OUTPUT
+          echo "linux_arm64_sha=$LINUX_ARM64_SHA" >> $GITHUB_OUTPUT
+
+      - name: Create branch
+        id: branch
+        run: |
+          BRANCH="xiond-${{ steps.version.outputs.tag }}"
+          git checkout -b "$BRANCH" || git checkout "$BRANCH"
+          echo "branch=$BRANCH" >> $GITHUB_OUTPUT
+
+      - name: Update main formula
+        run: |
+          set -e
+          FORMULA_FILE="Formula/xiond.rb"
+          
+          if [ ! -f "$FORMULA_FILE" ]; then
+            echo "Error: Formula file not found: $FORMULA_FILE"
+            exit 1
+          fi
+          
+          # Update version
+          sed -i "s/version \"[^\"]*\"/version \"${{ steps.version.outputs.version }}\"/g" "$FORMULA_FILE"
+          
+          # Update darwin amd64 URL and SHA256
+          sed -i "s|url \"https://github.com/burnt-labs/xion/releases/download/v[^/]*/xiond_[^_]*_darwin_amd64.tar.gz\"|url \"https://github.com/burnt-labs/xion/releases/download/${{ steps.version.outputs.tag }}/xiond_${{ steps.version.outputs.version }}_darwin_amd64.tar.gz\"|g" "$FORMULA_FILE"
+          sed -i "/darwin_amd64.tar.gz/,/sha256/ s/sha256 \"[^\"]*\"/sha256 \"${{ steps.sha256.outputs.darwin_amd64_sha }}\"/g" "$FORMULA_FILE"
+          
+          # Update darwin arm64 URL and SHA256
+          sed -i "s|url \"https://github.com/burnt-labs/xion/releases/download/v[^/]*/xiond_[^_]*_darwin_arm64.tar.gz\"|url \"https://github.com/burnt-labs/xion/releases/download/${{ steps.version.outputs.tag }}/xiond_${{ steps.version.outputs.version }}_darwin_arm64.tar.gz\"|g" "$FORMULA_FILE"
+          sed -i "/darwin_arm64.tar.gz/,/sha256/ s/sha256 \"[^\"]*\"/sha256 \"${{ steps.sha256.outputs.darwin_arm64_sha }}\"/g" "$FORMULA_FILE"
+          
+          # Update linux amd64 URL and SHA256
+          sed -i "s|url \"https://github.com/burnt-labs/xion/releases/download/v[^/]*/xiond_[^_]*_linux_amd64.tar.gz\"|url \"https://github.com/burnt-labs/xion/releases/download/${{ steps.version.outputs.tag }}/xiond_${{ steps.version.outputs.version }}_linux_amd64.tar.gz\"|g" "$FORMULA_FILE"
+          sed -i "/linux_amd64.tar.gz/,/sha256/ s/sha256 \"[^\"]*\"/sha256 \"${{ steps.sha256.outputs.linux_amd64_sha }}\"/g" "$FORMULA_FILE"
+          
+          # Update linux arm64 URL and SHA256
+          sed -i "s|url \"https://github.com/burnt-labs/xion/releases/download/v[^/]*/xiond_[^_]*_linux_arm64.tar.gz\"|url \"https://github.com/burnt-labs/xion/releases/download/${{ steps.version.outputs.tag }}/xiond_${{ steps.version.outputs.version }}_linux_arm64.tar.gz\"|g" "$FORMULA_FILE"
+          sed -i "/linux_arm64.tar.gz/,/sha256/ s/sha256 \"[^\"]*\"/sha256 \"${{ steps.sha256.outputs.linux_arm64_sha }}\"/g" "$FORMULA_FILE"
+
+      - name: Create or update versioned formula
+        run: |
+          set -e
+          VERSIONED_FILE="Formula/xiond@${{ steps.version.outputs.major }}.rb"
+          
+          if [ ! -f "$VERSIONED_FILE" ]; then
+            # Create new versioned formula based on main formula
+            if [ ! -f "Formula/xiond.rb" ]; then
+              echo "Error: Main formula file not found"
+              exit 1
+            fi
+            cp Formula/xiond.rb "$VERSIONED_FILE"
+            # Update class name
+            sed -i "s/class Xiond < Formula/class XiondAT${{ steps.version.outputs.major }} < Formula/g" "$VERSIONED_FILE"
+          else
+            # Update existing versioned formula
+            # Update version
+            sed -i "s/version \"[^\"]*\"/version \"${{ steps.version.outputs.version }}\"/g" "$VERSIONED_FILE"
+            
+            # Update darwin amd64 URL and SHA256
+            sed -i "s|url \"https://github.com/burnt-labs/xion/releases/download/v[^/]*/xiond_[^_]*_darwin_amd64.tar.gz\"|url \"https://github.com/burnt-labs/xion/releases/download/${{ steps.version.outputs.tag }}/xiond_${{ steps.version.outputs.version }}_darwin_amd64.tar.gz\"|g" "$VERSIONED_FILE"
+            sed -i "/darwin_amd64.tar.gz/,/sha256/ s/sha256 \"[^\"]*\"/sha256 \"${{ steps.sha256.outputs.darwin_amd64_sha }}\"/g" "$VERSIONED_FILE"
+            
+            # Update darwin arm64 URL and SHA256
+            sed -i "s|url \"https://github.com/burnt-labs/xion/releases/download/v[^/]*/xiond_[^_]*_darwin_arm64.tar.gz\"|url \"https://github.com/burnt-labs/xion/releases/download/${{ steps.version.outputs.tag }}/xiond_${{ steps.version.outputs.version }}_darwin_arm64.tar.gz\"|g" "$VERSIONED_FILE"
+            sed -i "/darwin_arm64.tar.gz/,/sha256/ s/sha256 \"[^\"]*\"/sha256 \"${{ steps.sha256.outputs.darwin_arm64_sha }}\"/g" "$VERSIONED_FILE"
+            
+            # Update linux amd64 URL and SHA256
+            sed -i "s|url \"https://github.com/burnt-labs/xion/releases/download/v[^/]*/xiond_[^_]*_linux_amd64.tar.gz\"|url \"https://github.com/burnt-labs/xion/releases/download/${{ steps.version.outputs.tag }}/xiond_${{ steps.version.outputs.version }}_linux_amd64.tar.gz\"|g" "$VERSIONED_FILE"
+            sed -i "/linux_amd64.tar.gz/,/sha256/ s/sha256 \"[^\"]*\"/sha256 \"${{ steps.sha256.outputs.linux_amd64_sha }}\"/g" "$VERSIONED_FILE"
+            
+            # Update linux arm64 URL and SHA256
+            sed -i "s|url \"https://github.com/burnt-labs/xion/releases/download/v[^/]*/xiond_[^_]*_linux_arm64.tar.gz\"|url \"https://github.com/burnt-labs/xion/releases/download/${{ steps.version.outputs.tag }}/xiond_${{ steps.version.outputs.version }}_linux_arm64.tar.gz\"|g" "$VERSIONED_FILE"
+            sed -i "/linux_arm64.tar.gz/,/sha256/ s/sha256 \"[^\"]*\"/sha256 \"${{ steps.sha256.outputs.linux_arm64_sha }}\"/g" "$VERSIONED_FILE"
+          fi
+
+      - name: Create or update specific version formula
+        run: |
+          set -e
+          # Convert version to class name format (e.g., 21.0.1 -> 2101)
+          VERSION_CLASS=$(echo "${{ steps.version.outputs.version }}" | tr -d '.')
+          SPECIFIC_VERSION_FILE="Formula/xiond@${{ steps.version.outputs.version }}.rb"
+          
+          if [ ! -f "$SPECIFIC_VERSION_FILE" ]; then
+            # Create new specific version formula based on main formula
+            if [ ! -f "Formula/xiond.rb" ]; then
+              echo "Error: Main formula file not found"
+              exit 1
+            fi
+            cp Formula/xiond.rb "$SPECIFIC_VERSION_FILE"
+            # Update class name (e.g., Xiond -> XiondAT2101)
+            sed -i "s/class Xiond < Formula/class XiondAT${VERSION_CLASS} < Formula/g" "$SPECIFIC_VERSION_FILE"
+          else
+            # Update existing specific version formula
+            # Update version
+            sed -i "s/version \"[^\"]*\"/version \"${{ steps.version.outputs.version }}\"/g" "$SPECIFIC_VERSION_FILE"
+            
+            # Update darwin amd64 URL and SHA256
+            sed -i "s|url \"https://github.com/burnt-labs/xion/releases/download/v[^/]*/xiond_[^_]*_darwin_amd64.tar.gz\"|url \"https://github.com/burnt-labs/xion/releases/download/${{ steps.version.outputs.tag }}/xiond_${{ steps.version.outputs.version }}_darwin_amd64.tar.gz\"|g" "$SPECIFIC_VERSION_FILE"
+            sed -i "/darwin_amd64.tar.gz/,/sha256/ s/sha256 \"[^\"]*\"/sha256 \"${{ steps.sha256.outputs.darwin_amd64_sha }}\"/g" "$SPECIFIC_VERSION_FILE"
+            
+            # Update darwin arm64 URL and SHA256
+            sed -i "s|url \"https://github.com/burnt-labs/xion/releases/download/v[^/]*/xiond_[^_]*_darwin_arm64.tar.gz\"|url \"https://github.com/burnt-labs/xion/releases/download/${{ steps.version.outputs.tag }}/xiond_${{ steps.version.outputs.version }}_darwin_arm64.tar.gz\"|g" "$SPECIFIC_VERSION_FILE"
+            sed -i "/darwin_arm64.tar.gz/,/sha256/ s/sha256 \"[^\"]*\"/sha256 \"${{ steps.sha256.outputs.darwin_arm64_sha }}\"/g" "$SPECIFIC_VERSION_FILE"
+            
+            # Update linux amd64 URL and SHA256
+            sed -i "s|url \"https://github.com/burnt-labs/xion/releases/download/v[^/]*/xiond_[^_]*_linux_amd64.tar.gz\"|url \"https://github.com/burnt-labs/xion/releases/download/${{ steps.version.outputs.tag }}/xiond_${{ steps.version.outputs.version }}_linux_amd64.tar.gz\"|g" "$SPECIFIC_VERSION_FILE"
+            sed -i "/linux_amd64.tar.gz/,/sha256/ s/sha256 \"[^\"]*\"/sha256 \"${{ steps.sha256.outputs.linux_amd64_sha }}\"/g" "$SPECIFIC_VERSION_FILE"
+            
+            # Update linux arm64 URL and SHA256
+            sed -i "s|url \"https://github.com/burnt-labs/xion/releases/download/v[^/]*/xiond_[^_]*_linux_arm64.tar.gz\"|url \"https://github.com/burnt-labs/xion/releases/download/${{ steps.version.outputs.tag }}/xiond_${{ steps.version.outputs.version }}_linux_arm64.tar.gz\"|g" "$SPECIFIC_VERSION_FILE"
+            sed -i "/linux_arm64.tar.gz/,/sha256/ s/sha256 \"[^\"]*\"/sha256 \"${{ steps.sha256.outputs.linux_arm64_sha }}\"/g" "$SPECIFIC_VERSION_FILE"
+          fi
+
+      - name: Commit changes
+        run: |
+          git add Formula/
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+            exit 0
+          fi
+          git commit -m "Brew formula update for xiond version ${{ steps.version.outputs.tag }}"
+
+      - name: Push changes
+        run: |
+          git push origin "${{ steps.branch.outputs.branch }}" || git push -f origin "${{ steps.branch.outputs.branch }}"
+
+      - name: Create Pull Request
+        env:
+          GH_TOKEN: ${{ secrets.BURNT_PAT_GITHUB_ACTIONS_TOKEN }}
+        run: |
+          set -e
+          BRANCH="${{ steps.branch.outputs.branch }}"
+          PR_TITLE="Brew formula update for xiond version ${{ steps.version.outputs.tag }}"
+          PR_BODY="Updates the Homebrew formula for xiond to version ${{ steps.version.outputs.tag }}"
+          
+          # Check if PR already exists
+          EXISTING_PR=$(gh pr list --repo burnt-labs/homebrew-xion --head "$BRANCH" --json number --jq '.[0].number' || echo "")
+          
+          if [ -n "$EXISTING_PR" ] && [ "$EXISTING_PR" != "null" ]; then
+            echo "PR #$EXISTING_PR already exists for branch $BRANCH"
+            exit 0
+          fi
+          
+          # Create new PR
+          gh pr create \
+            --repo burnt-labs/homebrew-xion \
+            --base main \
+            --head "$BRANCH" \
+            --title "$PR_TITLE" \
+            --body "$PR_BODY" \
+            --label "automated" || echo "Failed to create PR or PR already exists"
+
