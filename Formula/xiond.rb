@@ -6,6 +6,7 @@ class Xiond < Formula
   desc "Xiond is the Cosmos SDK based blockchain cli/daemon for the Xion Network."
   homepage "https://xion.burnt.com/"
   version "22.0.0"
+
   license "Apache2.0"
 
   on_macos do
