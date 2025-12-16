@@ -94,7 +94,7 @@ jobs:
             export PATH="/home/linuxbrew/.linuxbrew/bin:$PATH"
           fi
 
-          brew tap burnt-labs/xion
+          brew tap burnt-labs/xion ${{ github.workspace }}
           if [[ "${{ matrix.version }}" == "null" ]]; then
             echo "Installing latest version of xiond"
             brew install xiond
