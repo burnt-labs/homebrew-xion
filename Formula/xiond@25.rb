@@ -5,21 +5,21 @@
 class XiondAT25 < Formula
   desc "Xiond is the Cosmos SDK based blockchain cli/daemon for the Xion Network."
   homepage "https://xion.burnt.com/"
-  version "25.0.2"
+  version "25.1.0-rc1"
   license "Apache2.0"
 
   on_macos do
     if Hardware::CPU.intel?
-      url "https://github.com/burnt-labs/xion/releases/download/v25.0.2/xiond_25.0.2_darwin_amd64.tar.gz"
-      sha256 "5c6f73c6945705755dd91342df620dc67ef897940bbdabf00d570e06666cceab"
+      url "https://github.com/burnt-labs/xion/releases/download/v25.1.0-rc1/xiond_25.1.0-rc1_darwin_amd64.tar.gz"
+      sha256 "08a9e28f958b2764b84cd721e258b4cb2bcda0fd4a7a265fb152e0618c7c0eb0"
 
       def install
         bin.install "xiond"
       end
     end
     if Hardware::CPU.arm?
-      url "https://github.com/burnt-labs/xion/releases/download/v25.0.2/xiond_25.0.2_darwin_arm64.tar.gz"
-      sha256 "b1485593c112162b28aa4ed2b6174a535408b7f2557d8fcb7838fbdfc03d6a9f"
+      url "https://github.com/burnt-labs/xion/releases/download/v25.1.0-rc1/xiond_25.1.0-rc1_darwin_arm64.tar.gz"
+      sha256 "af0e37b3097695914b39cf0dddb5622cec80ad5ffcb3c08b83411cdf380c6a7e"
 
       def install
         bin.install "xiond"
@@ -29,15 +29,15 @@ class XiondAT25 < Formula
 
   on_linux do
     if Hardware::CPU.intel? && Hardware::CPU.is_64_bit?
-      url "https://github.com/burnt-labs/xion/releases/download/v25.0.2/xiond_25.0.2_linux_amd64.tar.gz"
-      sha256 "4992be2389c783d8a724f4f6b405a89b5572b33ab5767473262d1c780f57fb15"
+      url "https://github.com/burnt-labs/xion/releases/download/v25.1.0-rc1/xiond_25.1.0-rc1_linux_amd64.tar.gz"
+      sha256 "5e2fa69e9deafc636390c760658c5e69b258cd5a8d0ecc178c0da50cdbb8768b"
       def install
         bin.install "xiond"
       end
     end
     if Hardware::CPU.arm? && Hardware::CPU.is_64_bit?
-      url "https://github.com/burnt-labs/xion/releases/download/v25.0.2/xiond_25.0.2_linux_arm64.tar.gz"
-      sha256 "566e90bd69369e1d9fec26e95e8497e7d00176844745db95497ddadf4991f169"
+      url "https://github.com/burnt-labs/xion/releases/download/v25.1.0-rc1/xiond_25.1.0-rc1_linux_arm64.tar.gz"
+      sha256 "ce5c5ef1ab650b1c29cc43c625b4b91a7249d22e9668463917fd40525a7e5803"
       def install
         bin.install "xiond"
       end
