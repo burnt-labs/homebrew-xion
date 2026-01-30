@@ -249,11 +249,7 @@ jobs:
           
           if [ "$IS_PRERELEASE" == "true" ]; then
             PR_TITLE="[Pre-release] Brew formula update for xiond version ${{ steps.version.outputs.tag }}"
-            PR_BODY="Updates the Homebrew versioned formulas for xiond pre-release ${{ steps.version.outputs.tag }}.
-
-**Note:** This is a pre-release. The main \`xiond.rb\` formula is unchanged (users running \`brew install xiond\` will still get the latest stable release).
-
-To install this pre-release: \`brew install burnt-labs/xion/xiond@${{ steps.version.outputs.version }}\`"
+            PR_BODY="Updates the Homebrew versioned formulas for xiond pre-release ${{ steps.version.outputs.tag }}. Note: This is a pre-release. The main xiond.rb formula is unchanged (users running brew install xiond will still get the latest stable release). To install this pre-release: brew install burnt-labs/xion/xiond@${{ steps.version.outputs.version }}"
           else
             PR_TITLE="Brew formula update for xiond version ${{ steps.version.outputs.tag }}"
             PR_BODY="Updates the Homebrew formula for xiond to version ${{ steps.version.outputs.tag }}"
