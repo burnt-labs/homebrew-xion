@@ -5,21 +5,21 @@
 class XiondAT26 < Formula
   desc "Xiond is the Cosmos SDK based blockchain cli/daemon for the Xion Network."
   homepage "https://xion.burnt.com/"
-  version "26.0.0-rc1"
+  version "26.1.0-rc2"
   license "Apache2.0"
 
   on_macos do
     if Hardware::CPU.intel?
-      url "https://github.com/burnt-labs/xion/releases/download/v26.0.0-rc1/xiond_26.0.0-rc1_darwin_amd64.tar.gz"
-      sha256 "d2889126b4a83b55116d085b4dbb28d9295d21dca91af9acabddf39705a84444"
+      url "https://github.com/burnt-labs/xion/releases/download/v26.1.0-rc2/xiond_26.1.0-rc2_darwin_amd64.tar.gz"
+      sha256 "5589a7e37846ba8877a8d2678c541385103d64476d2ecf5c05c95ed05552e007"
 
       def install
         bin.install "xiond"
       end
     end
     if Hardware::CPU.arm?
-      url "https://github.com/burnt-labs/xion/releases/download/v26.0.0-rc1/xiond_26.0.0-rc1_darwin_arm64.tar.gz"
-      sha256 "4be06ad881bb11ee772a3310d2fda96cd3ffc1c3cd711afe7f133dc713c8ee10"
+      url "https://github.com/burnt-labs/xion/releases/download/v26.1.0-rc2/xiond_26.1.0-rc2_darwin_arm64.tar.gz"
+      sha256 "e58aa74b678fb407105c7ea08454a3dfce0fd48a0e45b42a2c5ba556fd90ab40"
 
       def install
         bin.install "xiond"
@@ -29,15 +29,15 @@ class XiondAT26 < Formula
 
   on_linux do
     if Hardware::CPU.intel? && Hardware::CPU.is_64_bit?
-      url "https://github.com/burnt-labs/xion/releases/download/v26.0.0-rc1/xiond_26.0.0-rc1_linux_amd64.tar.gz"
-      sha256 "4d90fea2a4b4324c2719804631d30cd3191ba7140086d35cdef904dcc4f4bc83"
+      url "https://github.com/burnt-labs/xion/releases/download/v26.1.0-rc2/xiond_26.1.0-rc2_linux_amd64.tar.gz"
+      sha256 "a053d086bf30af6005adaa92fd8239fc339d394566bd682f7dcf7a0f75017f44"
       def install
         bin.install "xiond"
       end
     end
     if Hardware::CPU.arm? && Hardware::CPU.is_64_bit?
-      url "https://github.com/burnt-labs/xion/releases/download/v26.0.0-rc1/xiond_26.0.0-rc1_linux_arm64.tar.gz"
-      sha256 "d3b05b7341fdf5f28d25a6a202d3dde7e2a1f9aaa01b5aadce51f95d9be65e67"
+      url "https://github.com/burnt-labs/xion/releases/download/v26.1.0-rc2/xiond_26.1.0-rc2_linux_arm64.tar.gz"
+      sha256 "da8e70f2ab9ed1caa9c217bfb5d3b254b5c257ed35f0059e710d84aa734e703a"
       def install
         bin.install "xiond"
       end
