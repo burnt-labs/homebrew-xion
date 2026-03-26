@@ -6,7 +6,7 @@ class Xiond < Formula
   desc "Xiond is the Cosmos SDK based blockchain cli/daemon for the Xion Network."
   homepage "https://xion.burnt.com/"
   version "28.1.0"
-  license "Apache-2.0"
+  license "Apache2.0"
 
   on_macos do
     if Hardware::CPU.intel?
