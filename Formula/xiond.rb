@@ -5,21 +5,21 @@
 class Xiond < Formula
   desc "Xiond is the Cosmos SDK based blockchain cli/daemon for the Xion Network."
   homepage "https://xion.burnt.com/"
-  version "29.0.0"
+  version "29.0.1"
   license "Apache-2.0"
 
   on_macos do
     if Hardware::CPU.intel?
-      url "https://github.com/burnt-labs/xion/releases/download/v29.0.0/xiond_29.0.0_darwin_amd64.tar.gz"
-      sha256 "e420e4445ae7c18e778e1f33ee50efe93c8f78b94a15a207f198d60e2131f220"
+      url "https://github.com/burnt-labs/xion/releases/download/v29.0.1/xiond_29.0.1_darwin_amd64.tar.gz"
+      sha256 "bdf7ecd3aa136f19eadd46480a4dc1898381d07751ff4091bd624f1eb341a809"
 
       define_method(:install) do
         bin.install "xiond"
       end
     end
     if Hardware::CPU.arm?
-      url "https://github.com/burnt-labs/xion/releases/download/v29.0.0/xiond_29.0.0_darwin_arm64.tar.gz"
-      sha256 "26fd2dc2a026f925a4c9158457ff986dd401bb32c165f232d6d1a38d02f5911b"
+      url "https://github.com/burnt-labs/xion/releases/download/v29.0.1/xiond_29.0.1_darwin_arm64.tar.gz"
+      sha256 "cb0a29c8135c9348744fcbaa4ea794cc417f708e46abe1c1db099bbcb7d1601f"
 
       define_method(:install) do
         bin.install "xiond"
@@ -29,15 +29,15 @@ class Xiond < Formula
 
   on_linux do
     if Hardware::CPU.intel? && Hardware::CPU.is_64_bit?
-      url "https://github.com/burnt-labs/xion/releases/download/v29.0.0/xiond_29.0.0_linux_amd64.tar.gz"
-      sha256 "1b57656d346764919991dce32c53e9db56d4d7658da661d9759ef4378faaf5d9"
+      url "https://github.com/burnt-labs/xion/releases/download/v29.0.1/xiond_29.0.1_linux_amd64.tar.gz"
+      sha256 "c00a269695f32ccd1fbe54f3d7db506fe8576373ece7a54f7e46f423ab4c3312"
       define_method(:install) do
         bin.install "xiond"
       end
     end
     if Hardware::CPU.arm? && Hardware::CPU.is_64_bit?
-      url "https://github.com/burnt-labs/xion/releases/download/v29.0.0/xiond_29.0.0_linux_arm64.tar.gz"
-      sha256 "fc54a5a030e0bb68bc325a15dd0bb5e70f38dcfadf30c4b44968f65c6933faf4"
+      url "https://github.com/burnt-labs/xion/releases/download/v29.0.1/xiond_29.0.1_linux_arm64.tar.gz"
+      sha256 "33724370cde672d2d6f7d7ca45c54241c15d714e258559b8cab7c37a4a5d40bf"
       define_method(:install) do
         bin.install "xiond"
       end
