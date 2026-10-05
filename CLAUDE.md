@@ -31,7 +31,7 @@ form Homebrew needs to recognise a same-tap formula-to-cask migration.
 
 - `install`: runs `brew install xiond@<version>` (formula or cask) for every
   pinned name, plus `brew install xiond`.
-- `migrate-formula-to-cask`: installs the old `xiond` / `xiond@29` formula from
+- `migrate-formula-to-cask`: installs each retired formula (`xiond`, `xiond@29`, `xiond@29.0.1`) from
   the last tap commit that shipped it, updates the tap to the commit under test
   and checks that `brew update` replaced it with the cask.
 

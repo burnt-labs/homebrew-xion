@@ -110,7 +110,7 @@ jobs:
 
           xiond version --long
 
-  # Users who installed the old `xiond` / `xiond@29` formulae must be moved to the
+  # Users of the old `xiond`, `xiond@29` and `xiond@29.0.1` formulae must be moved to the
   # casks by `brew update` (tap_migrations.json). Start from the last tap commit
   # that still shipped those formulae, install one, move the tap to this commit
   # and check that the cask replaced it.
@@ -120,7 +120,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [macos-latest, ubuntu-latest]
-        formula: [xiond, xiond@29]
+        formula: [xiond, xiond@29, xiond@29.0.1]
 
     env:
       HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK: 1
