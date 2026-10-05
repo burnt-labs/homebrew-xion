@@ -5,35 +5,35 @@ Homebrew tap for the `xiond` CLI. Provides `brew install burnt-labs/xion/xiond`.
 ## Repository Structure
 
 ```
+Casks/
+  xiond.rb            # Latest stable release (written by GoReleaser on release)
+  xiond@MAJOR.rb      # Major-version pinned casks (e.g., xiond@31.rb)
+  xiond@VERSION.rb    # Full-version pinned casks (e.g., xiond@31.0.2.rb)
 Formula/
-  xiond.rb          # Latest stable formula (updated automatically on release)
-  xiond@MAJOR.rb    # Major-version pinned formulas (e.g., xiond@25.rb)
-  xiond@VERSION.rb  # Full-version pinned formulas (e.g., xiond@25.0.2.rb)
-generate.sh         # Formula generation helper
-lib/                # Shared formula helpers
+  xiond@VERSION.rb    # Releases before v29 (and 29.0.0 / rcs); frozen, no new files
+tap_migrations.json   # Moves the retired xiond, xiond@29, xiond@29.0.1 formulae to the casks
+generate.sh           # Legacy formula generation helper
+lib/                  # Legacy formula helpers
 ```
 
+Since v30 every stable release ships as a cask. Do not add `Formula/xiond.rb`
+or any formula whose name matches a cask: Homebrew resolves the formula first,
+so anyone who has it installed stops receiving upgrades. The `xiond`,
+`xiond@29` and `xiond@29.0.1` formulae were retired for that reason;
+`tap_migrations.json` lists them with the tap name (`"burnt-labs/xion"`), the
+form Homebrew needs to recognise a same-tap formula-to-cask migration.
+
 ## GitHub Workflows
-
-### `update-release.yaml` (primary update mechanism)
-
-**Triggered by:**
-- `repository_dispatch` event type: `homebrew-release-trigger`
-- `workflow_dispatch` — manual with inputs: `tag_name`, `release_name`
-
-**What it does:**
-1. Downloads release assets from `burnt-labs/xion`
-2. Extracts sha256 checksums for each platform
-3. Updates `Formula/xiond.rb`, `Formula/xiond@MAJOR.rb`, `Formula/xiond@VERSION.rb`
-4. Creates or updates a PR
-
-> **Note:** GoReleaser in `burnt-labs/xion` also updates `Formula/xiond.rb` directly via `HOMEBREW_TAP_TOKEN` when a release is published. The `update-release.yaml` workflow provides an alternative/fallback trigger.
 
 ### `install.yml`
 
 **Triggered by:** PRs to main, push to main, manual dispatch
 
-Runs `brew install` to verify formula validity.
+- `install`: runs `brew install xiond@<version>` (formula or cask) for every
+  pinned name, plus `brew install xiond`.
+- `migrate-formula-to-cask`: installs the old `xiond` / `xiond@29` formula from
+  the last tap commit that shipped it, updates the tap to the commit under test
+  and checks that `brew update` replaced it with the cask.
 
 ### `tests.yml`
 
@@ -53,8 +53,7 @@ Claude AI PR review and code agent.
 
 | Source | Method | Condition |
 |--------|--------|-----------|
-| `burnt-labs/xion` | GoReleaser via `HOMEBREW_TAP_TOKEN` | Stable release published |
-| `burnt-labs/xion` | `repository_dispatch: homebrew-release-trigger` | Stable release published |
+| `burnt-labs/xion` | GoReleaser (`homebrew_casks`) via `HOMEBREW_TAP_TOKEN` opens a `xiond-vX.Y.Z` PR | Stable release created (rc tags are skipped) |
 
 ## Downstream Triggers
 
@@ -63,8 +62,7 @@ None.
 ## Updating Manually
 
 ```bash
-# Update formula version
-# Edit Formula/xiond.rb — change version, URLs, and sha256 hashes
+# Update a cask: edit Casks/xiond.rb, Casks/xiond@MAJOR.rb, Casks/xiond@VERSION.rb
 # Checksums are in: https://github.com/burnt-labs/xion/releases/download/vX.Y.Z/xiond-X.Y.Z-checksums.txt
 ```
 
@@ -72,5 +70,4 @@ None.
 
 | Secret | Purpose |
 |--------|---------|
-| `BURNT_PAT_GITHUB_ACTIONS_TOKEN` | Push formula updates |
-| `GITHUB_TOKEN` | PR creation |
+| `GITHUB_TOKEN` | Workflow checkout |

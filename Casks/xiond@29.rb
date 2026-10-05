@@ -5,22 +5,22 @@ cask "xiond@29" do
   on_macos do
     on_intel do
       url "https://github.com/burnt-labs/xion/releases/download/v#{version}/xiond_#{version}_darwin_amd64.tar.gz"
-      sha256 "9fbb92bd0c3b9e207096055793283546fda7fdb1d42fd993b71b33a99c847a94"
+      sha256 "bdf7ecd3aa136f19eadd46480a4dc1898381d07751ff4091bd624f1eb341a809"
     end
     on_arm do
       url "https://github.com/burnt-labs/xion/releases/download/v#{version}/xiond_#{version}_darwin_arm64.tar.gz"
-      sha256 "855ac7bc917c8464eecb830407aa88b358396020490410463d7eee40151cc25e"
+      sha256 "cb0a29c8135c9348744fcbaa4ea794cc417f708e46abe1c1db099bbcb7d1601f"
     end
   end
 
   on_linux do
     on_intel do
       url "https://github.com/burnt-labs/xion/releases/download/v#{version}/xiond_#{version}_linux_amd64.tar.gz"
-      sha256 "714d51aab8cc9fc29e3d6331cf0e2e46ff4b039508e34f3a009fe941f1237dc8"
+      sha256 "c00a269695f32ccd1fbe54f3d7db506fe8576373ece7a54f7e46f423ab4c3312"
     end
     on_arm do
       url "https://github.com/burnt-labs/xion/releases/download/v#{version}/xiond_#{version}_linux_arm64.tar.gz"
-      sha256 "c36a80e25d8c824b34403d698803a58ebec57d84e8cdbb9e8531935c197cc479"
+      sha256 "33724370cde672d2d6f7d7ca45c54241c15d714e258559b8cab7c37a4a5d40bf"
     end
   end
 
