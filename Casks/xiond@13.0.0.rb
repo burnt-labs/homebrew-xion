@@ -1,9 +1,9 @@
 # Legacy release, converted from Formula/xiond@13.0.0.rb. Frozen: do not edit.
 cask "xiond@13.0.0" do
-  version "13.0.0"
-
   arch arm: "arm64", intel: "amd64"
   os macos: "darwin", linux: "linux"
+
+  version "13.0.0"
 
   on_macos do
     on_arm do

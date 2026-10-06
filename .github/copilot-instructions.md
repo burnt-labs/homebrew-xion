@@ -2,13 +2,13 @@
 
 ## Repository Overview
 
-This is a **Homebrew tap** (third-party repository) that provides formulas for installing the Xion Daemon (`xiond`), a Cosmos SDK-based blockchain CLI/daemon for the Xion Network.
+This is a **Homebrew tap** (third-party repository) that provides casks for installing the Xion Daemon (`xiond`), a Cosmos SDK-based blockchain CLI/daemon for the Xion Network.
 
 **Key Information:**
 - **Source**: Binary releases from https://github.com/burnt-labs/xion/releases
 - **Homepage**: https://xion.burnt.com/
 - **License**: Apache 2.0
-- **Total Formulas**: 56+ formula files covering versions 4.0.1 through 26.x
+- **Packages**: casks only, `xiond`, `xiond@MAJOR` and `xiond@VERSION`, for releases v4 onwards (rcs included)
 - **Platforms**: macOS (Intel + Apple Silicon) and Linux (Intel + ARM64)
 
 ## Repository Structure
@@ -18,159 +18,124 @@ This is a **Homebrew tap** (third-party repository) that provides formulas for i
 ├── .github/
 │   └── workflows/           # GitHub Actions for CI/CD and automation
 │       ├── claude.yml       # Interactive Claude Code integration
-│       ├── claude-code-review.yml  # Automated code reviews
-│       ├── install.yml      # Installation testing (72 version/OS combos)
-│       ├── publish.yml      # PR bottle publishing workflow
-│       └── tests.yml        # Homebrew test-bot
-├── Casks/                   # Current releases (v29.0.1+), written by GoReleaser
+│       ├── install.yml      # Checksums, install of every cask, formula-to-cask migration
+│       └── tests.yml        # Homebrew test-bot (tap syntax)
+├── Casks/
 │   ├── xiond.rb            # Latest stable release
 │   ├── xiond@MAJOR.rb      # Major version casks (e.g., xiond@31.rb)
 │   └── xiond@VERSION.rb    # Specific version casks (e.g., xiond@31.0.2.rb)
-├── Formula/                 # Frozen formulae for releases before v29 (plus 29.0.0 and rcs)
-├── tap_migrations.json      # Moves the retired xiond / xiond@29 / xiond@29.0.1 formulae to casks
-├── lib/
-│   └── base.rb             # Legacy base template (not actively used)
-├── generate.sh             # Manual script to generate versioned formulas
+├── scripts/
+│   └── check-cask-checksums.py  # Checks every sha256 against the release checksums
+├── tap_migrations.json      # Moves every retired formula to the cask of the same name
 └── README.md               # User installation and troubleshooting guide
 ```
 
-## Casks Replace the Formulae (v30+)
+## Casks Only
 
-Since v30, GoReleaser in `burnt-labs/xion` (`homebrew_casks`) writes three
-casks per stable release: `Casks/xiond.rb`, `Casks/xiond@MAJOR.rb` and
-`Casks/xiond@VERSION.rb`. The formulae below are historical and frozen.
+There is no `Formula/` directory. **Never add a formula.** Homebrew resolves a
+formula before a cask of the same name, so anyone with the formula installed
+stops receiving upgrades; that is how `brew upgrade xiond` got stuck at 29.0.1.
 
-**Never add a formula whose name matches a cask** (`Formula/xiond.rb`,
-`Formula/xiond@30.rb`, ...). Homebrew resolves the formula first, so anyone
-with it installed stops receiving upgrades. The `xiond`, `xiond@29` and
-`xiond@29.0.1` formulae were deleted for this reason and are listed in
-`tap_migrations.json` with the value `"burnt-labs/xion"` (tap name only: a
-fully qualified `burnt-labs/xion/xiond` value makes Homebrew skip a same-tap
-formula-to-cask migration).
+### Why casks
 
-## Formula Naming and Versioning Strategy (historical, ≤ v29)
+`xiond` ships as prebuilt binaries, and casks are Homebrew's mechanism for
+prebuilt binaries; formulae are meant to build from source. GoReleaser
+deprecated `brews` in favour of `homebrew_casks` in v2.10
+(https://goreleaser.com/blog/goreleaser-v2.10/), fully deprecated it in v2.16
+(https://goreleaser.com/blog/goreleaser-v2.16/) and plans to remove it in v3.
+xion switched in https://github.com/burnt-labs/xion/pull/568.
 
-### Pre-release Handling
+### Legacy casks (v4 to v29.0.1)
 
-- Pre-releases (containing `-rc`, `-alpha`, `-beta`, `-preview`, `-dev`) get versioned formulas
-- Pre-releases **DO NOT** update the main `xiond.rb` formula
-- This keeps the latest stable version as the default for `brew install xiond`
+These were converted from the formulae that used to live in `Formula/`, with
+the same names and versions. They are frozen: their header says so, and they
+do not carry the GoReleaser header. Five formulae had no release left on GitHub
+(v25.1.0-rc1, v26.1.0-rc1, v26.1.0-rc2, v27.0.0-rc1, v28.0.1) and have no
+cask.
 
-## Formula Structure and Conventions
+### tap_migrations.json
 
-### Standard Formula Format (v15+)
+Every retired formula that has a cask is listed with the value
+`"burnt-labs/xion"` (tap name only). A fully qualified value such as
+`"burnt-labs/xion/xiond"` makes Homebrew skip a same-tap formula-to-cask
+migration. A new cask never needs an entry.
 
-Modern formulas (version 15 and later) follow this structure:
+## Cask Structure and Conventions
+
+### Standard Cask Format (GoReleaser shape)
 
 ```ruby
-# typed: false
-# frozen_string_literal: true
-
 # This file was generated by GoReleaser. DO NOT EDIT.
-class XiondAT26 < Formula
-  desc "Xiond is the Cosmos SDK based blockchain cli/daemon for the Xion Network."
-  homepage "https://xion.burnt.com/"
-  version "26.0.0-rc1"
-  license "Apache2.0"
+cask "xiond@31.0.2" do
+  version "31.0.2"
 
   on_macos do
-    if Hardware::CPU.intel?
-      url "https://github.com/burnt-labs/xion/releases/download/v26.0.0-rc1/xiond_26.0.0-rc1_darwin_amd64.tar.gz"
-      sha256 "d2889126b4a83b55116d085b4dbb28d9295d21dca91af9acabddf39705a84444"
-
-      def install
-        bin.install "xiond"
-      end
+    on_arm do
+      sha256 "fa2fd0b577ac17b8755715a7ad046a7e33153cb21c2a216e831655ca2deb00f7"
+      url "https://github.com/burnt-labs/xion/releases/download/v#{version}/xiond_#{version}_darwin_arm64.tar.gz"
     end
-    if Hardware::CPU.arm?
-      url "https://github.com/burnt-labs/xion/releases/download/v26.0.0-rc1/xiond_26.0.0-rc1_darwin_arm64.tar.gz"
-      sha256 "4be06ad881bb11ee772a3310d2fda96cd3ffc1c3cd711afe7f133dc713c8ee10"
-
-      def install
-        bin.install "xiond"
-      end
+    on_intel do
+      sha256 "fa2c4b91385b35f11cc1c718d5774b87051992a86f8e8fd09a4000fd5520a76f"
+      url "https://github.com/burnt-labs/xion/releases/download/v#{version}/xiond_#{version}_darwin_amd64.tar.gz"
     end
   end
-
   on_linux do
-    if Hardware::CPU.intel? && Hardware::CPU.is_64_bit?
-      url "https://github.com/burnt-labs/xion/releases/download/v26.0.0-rc1/xiond_26.0.0-rc1_linux_amd64.tar.gz"
-      sha256 "4d90fea2a4b4324c2719804631d30cd3191ba7140086d35cdef904dcc4f4bc83"
-      def install
-        bin.install "xiond"
-      end
+    on_arm do
+      sha256 "98ec2c7e47068113a26b367ad3af270873b57f25e26f8456cb7ec5db27f48265"
+      url "https://github.com/burnt-labs/xion/releases/download/v#{version}/xiond_#{version}_linux_arm64.tar.gz"
     end
-    if Hardware::CPU.arm? && Hardware::CPU.is_64_bit?
-      url "https://github.com/burnt-labs/xion/releases/download/v26.0.0-rc1/xiond_26.0.0-rc1_linux_arm64.tar.gz"
-      sha256 "d3b05b7341fdf5f28d25a6a202d3dde7e2a1f9aaa01b5aadce51f95d9be65e67"
-      def install
-        bin.install "xiond"
-      end
+    on_intel do
+      sha256 "5af194eb5f4c0eb65c2ae11609c432e492a47cc659a85e0d0afb0e36e4a7fa2e"
+      url "https://github.com/burnt-labs/xion/releases/download/v#{version}/xiond_#{version}_linux_amd64.tar.gz"
     end
   end
 
-  test do
-    system "#{bin}/xiond version"
+  name "xiond@31.0.2"
+  desc "Xiond is the Cosmos SDK based blockchain cli/daemon for the Xion Network."
+  homepage "https://xion.burnt.com/"
+
+  livecheck do
+    skip "Auto-generated on release."
   end
+
+  binary "xiond"
+
+  # No zap stanza required
 end
 ```
 
-### Key Formula Conventions
+### Binary Distribution Format
 
-#### Ruby Style
-- `# frozen_string_literal: true` at the top
-- `# typed: false` for Sorbet (type checking disabled)
-- Use `&&` for boolean operators in modern formulas (v15+)
-- Use `and` for boolean operators in legacy formulas (≤v14)
-- 2-space indentation
+- **Most releases**: `xiond_VERSION_OS_ARCH.tar.gz`, containing `xiond`; checksums in `xiond-VERSION-checksums.txt`
+- **v12.0.0, 12.0.1, 13.0.0, 13.0.1, 14.0.0, 14.1.0, 14.1.1**: bare binaries `xiond-OS-ARCH`; checksums in `checksum.txt`. Their casks declare `arch arm: "arm64", intel: "amd64"` and `os macos: "darwin", linux: "linux"` and install with `binary "xiond-#{os}-#{arch}", target: "xiond"`
 
-#### Platform Detection
-- macOS: `on_macos do ... end`
-- Linux: `on_linux do ... end`
-- Intel CPUs: `Hardware::CPU.intel?`
-- ARM CPUs: `Hardware::CPU.arm?`
-- 64-bit check (Linux only): `Hardware::CPU.is_64_bit?`
+### One xiond at a time
 
-#### Binary Distribution Format
-- **v15+**: `xiond_VERSION_PLATFORM_ARCH.tar.gz` (underscore separator, tar.gz archive)
-- **≤v14**: `xiond-PLATFORM-ARCH` (hyphen separator, raw binary with `:nounzip`)
-
-#### Installation Method
-- **v15+**: Direct `bin.install "xiond"` (binary extracted from tar.gz)
-- **≤v14**: May need `mv` to rename binary before install
-
-#### Testing
-- All formulas include: `test do system "#{bin}/xiond version" end`
+Every cask installs the same `xiond` binary, so two of them cannot be
+installed together (`It seems there is already a Binary`).
 
 ## Automated Release Workflow
 
-A stable release in `burnt-labs/xion` runs GoReleaser, which pushes a
-`xiond-vVERSION` branch updating the three casks and opens a PR here
+A stable release in `burnt-labs/xion` runs GoReleaser Pro, whose
+`homebrew_casks` entry (`name: xiond`, `alternative_names`
+`xiond@{{ .Version }}` and `xiond@{{ .Major }}`) pushes a `xiond-vVERSION`
+branch updating the three casks and opens a PR here
 (`Brew cask update for xiond version vVERSION`). Release candidates are
-skipped (`skip_upload: auto`). Check the cask checksums against
-`xiond-VERSION-checksums.txt` on the release before merging.
-
-`generate.sh` is a legacy helper for the old formula layout; do not use it for
-v29 or later.
+skipped (`skip_upload: auto`). Check the cask checksums before merging; CI's
+`checksums` job does it with `scripts/check-cask-checksums.py`.
 
 ## Testing and CI/CD
 
-### install.yml - Installation Testing
-- **Matrix**: Tests 72 version/OS combinations
-- **OS**: macOS-latest, Ubuntu-latest
-- **Versions**: All patch versions (4.0.1, 6.0.1, etc.), all major versions (4, 6, 7, etc.), and latest stable
-- **Validation**: Runs `xiond version --long` after install
+### install.yml
+- **checksums**: every cask's sha256 against the release checksums file
+- **install**: `brew install --cask` for every file in `Casks/` (the matrix is built from the directory) on macOS-latest and Ubuntu-latest; `xiond version` must equal the cask version
+- **migrate-formula-to-cask**: a sample of retired formulae installed from the last tap commit that shipped them, then `brew update` to the commit under test must replace each with its cask
 - **Triggers**: PRs, pushes to main, manual dispatch
 
 ### tests.yml - Homebrew Test Bot
 - **Matrix**: Ubuntu 22.04, Ubuntu latest, macOS 13, macOS 14
-- **Steps**: Syntax checks, formula tests, bottle uploads
+- **Steps**: tap syntax check
 - **Trigger**: Manual dispatch only
-
-### publish.yml - PR Publishing
-- **Purpose**: Auto-merges and publishes bottles from approved PRs
-- **Trigger**: PRs labeled with `pr-pull` or manual dispatch
-- **Action**: Runs `brew pr-pull` and pushes to main
 
 ## Claude Code Integration
 
@@ -178,76 +143,38 @@ v29 or later.
 - Responds to `@claude` mentions in issues/PRs
 - Has `actions: read` permission to access CI results
 
-### claude-code-review.yml - Automated Reviews
-- Triggers on PR open/sync/ready_for_review/reopen
-- Uses code-review plugin from claude-code-plugins
-
 ## Common Tasks
 
 ### Adding a New Release
 
 1. A stable xiond release is published in burnt-labs/xion
 2. GoReleaser opens the cask PR in this repository
-3. Review the checksums and merge
+3. Check that CI (checksums, install) is green and merge
 
-### Linting Formulas
+### Linting Casks
 
 ```bash
 brew style burnt-labs/xion --fix
 ```
 
-### Testing a Formula Locally
+`Cask/Desc` (trailing full stop) is reported on every cask: the description
+comes from GoReleaser and is kept as is.
+
+### Testing a Cask Locally
 
 ```bash
 brew tap burnt-labs/xion
-brew install xiond@26.0.0-rc1
+brew install --cask burnt-labs/xion/xiond@28.1.0
 xiond version
+scripts/check-cask-checksums.py Casks/xiond@28.1.0.rb
 ```
-
-### Updating Documentation
-
-Only update `README.md` for user-facing changes. This tap has minimal documentation by design.
 
 ## Important Constraints and Guidelines
 
-### DO NOT Edit Formulas Manually
-
-- Formulas contain the header: `# This file was generated by GoReleaser. DO NOT EDIT.`
-- While they're not actually generated by GoReleaser (they're generated by our workflow), treat them as auto-generated
-- Use the automated workflow or `generate.sh` script instead of manual edits
-
-### Version Format Compatibility
-
-- Be aware of the v14/v15 format boundary
-- v15 introduced tar.gz archives and underscore separators
-- If working with very old versions (≤v14), check the format differences in `generate.sh`
-
-### Pre-release Handling
-
-- Always check if a version contains `-rc`, `-alpha`, `-beta`, `-preview`, or `-dev`
-- Pre-releases should NOT update `xiond.rb` (main formula)
-- PR titles for pre-releases should be prefixed with `[Pre-release]`
-
-### SHA256 Checksums Are Required
-
-- All formulas must have valid SHA256 checksums
-- Checksums are downloaded from GitHub releases (`xiond-VERSION-checksums.txt`)
-- All 4 platforms must have checksums: darwin_amd64, darwin_arm64, linux_amd64, linux_arm64
-
-### Class Naming Conventions
-
-Follow these strict patterns:
-- Main: `Xiond`
-- Major version: `XiondATMAJOR` (e.g., `XiondAT26`)
-- Specific version: `XiondATVERSION_NO_DOTS` (e.g., `XiondAT2502` for 25.0.2, `XiondAT2600-rc1` for 26.0.0-rc1)
-
-Note: Keep hyphens in class names for pre-release suffixes (e.g., `-rc1`, `-alpha1`)
-
-### Git Conventions
-
-- **Branch naming**: `xiond-vVERSION` for release updates
-- **Commit messages**: `Brew formula update for xiond version vVERSION`
-- **PR labels**: Add "automated" for bot-created PRs
+- Do not edit GoReleaser-generated casks by hand except to fix a wrong checksum; fix the release config in burnt-labs/xion instead
+- Do not edit the frozen legacy casks
+- All four platforms must have a url and sha256 matching the release checksums
+- Never add `Formula/` or a formula
 
 ## Troubleshooting
 
@@ -263,59 +190,28 @@ brew install xiond
 
 ### Checksum Mismatches
 
-If checksums don't match:
-1. Verify the release exists in burnt-labs/xion
-2. Check the checksums file format: `xiond-VERSION-checksums.txt`
-3. Ensure binary naming matches: `xiond_VERSION_PLATFORM_ARCH.tar.gz`
+1. Run `scripts/check-cask-checksums.py Casks/xiond@VERSION.rb`
+2. Verify the release exists in burnt-labs/xion
+3. Ensure the asset name matches the url (`xiond_VERSION_OS_ARCH.tar.gz`, or `xiond-OS-ARCH` for the bare-binary releases)
 
-### Formula Installation Failures
+### Cask Installation Failures
 
-1. Check platform detection logic (`on_macos`, `on_linux`, CPU checks)
-2. Verify URL is accessible and binary exists
-3. Ensure SHA256 matches downloaded file
-4. Test with: `brew install --verbose burnt-labs/xion/xiond@VERSION`
-
-## Repository Memories
-
-The repository has a memory system that stores facts about conventions:
-
-- **Release Management**: This tap maintains both major alias formulas (`xiond@28.rb`) and pinned version formulas (`xiond@28.1.0.rb`)
-
-## Testing Your Changes
-
-Before committing changes to formulas:
-
-1. **Lint the formula**:
-   ```bash
-   brew style burnt-labs/xion --fix
-   ```
-
-2. **Test installation** (if possible):
-   ```bash
-   brew install --verbose burnt-labs/xion/xiond@VERSION
-   xiond version
-   ```
-
-3. **Run audit** (if making formula structure changes):
-   ```bash
-   brew audit --strict burnt-labs/xion/xiond@VERSION
-   ```
-
-4. **Check the CI**: The `install.yml` workflow will test your changes across multiple OS/version combinations
-
-## External Resources
-
-- [Homebrew Formula Cookbook](https://docs.brew.sh/Formula-Cookbook)
-- [Homebrew Ruby Style Guide](https://docs.brew.sh/Formula-Cookbook#homebrew-terminology)
-- [Xion Network Documentation](https://docs.xion.burnt.com/)
-- [Cosmos SDK Documentation](https://docs.cosmos.network/)
+1. Check the `on_macos` / `on_linux` and `on_arm` / `on_intel` blocks
+2. Verify the URL is accessible
+3. Test with: `brew install --cask --verbose burnt-labs/xion/xiond@VERSION`
 
 ## Quick Reference: File Locations
 
 - Latest cask: `/Casks/xiond.rb`
 - Versioned casks: `/Casks/xiond@*.rb`
-- Frozen formulas (≤ v29): `/Formula/xiond@*.rb`
 - Formula-to-cask migrations: `/tap_migrations.json`
+- Checksum check: `/scripts/check-cask-checksums.py`
 - Release automation: GoReleaser in `burnt-labs/xion` (`.goreleaser/release.yaml`)
-- Legacy generation script: `/generate.sh`
 - Installation tests: `/.github/workflows/install.yml`
+
+## External Resources
+
+- [Homebrew Cask Cookbook](https://docs.brew.sh/Cask-Cookbook)
+- [GoReleaser Homebrew Casks](https://goreleaser.com/customization/publish/homebrew_casks/)
+- [Xion Network Documentation](https://docs.xion.burnt.com/)
+- [Cosmos SDK Documentation](https://docs.cosmos.network/)
