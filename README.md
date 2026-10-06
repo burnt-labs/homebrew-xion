@@ -27,6 +27,18 @@ v3. xion switched in [burnt-labs/xion#568](https://github.com/burnt-labs/xion/pu
 so every release since v30 is a cask. The older releases were converted to
 casks with the same names and versions, and the tap has no formulae.
 
+## macOS quarantine
+
+`xiond` is not notarized by Apple, so macOS would refuse to run a copy
+downloaded from the internet (the process is killed on launch). Every cask in
+this tap removes the `com.apple.quarantine` attribute from the `xiond` it
+installs, in a `postflight` hook, so no manual `xattr` step is needed after
+`brew install` or `brew upgrade`.
+
+This means Gatekeeper does not check `xiond` when it is installed from this
+tap. Notarizing the release binaries is the real fix; until then, install only
+from `burnt-labs/xion`, which pins each release's sha256.
+
 ## Upgrading from a formula
 
 Older versions of this tap installed `xiond`, `xiond@<major>` and

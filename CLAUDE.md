@@ -11,7 +11,8 @@ Casks/
   xiond@VERSION.rb    # Full-version pinned casks (e.g., xiond@31.0.2.rb)
 tap_migrations.json   # Moves every retired formula to the cask of the same name
 scripts/
-  check-cask-checksums.py  # Checks each cask's sha256 against its release
+  check-cask-checksums.py      # Checks each cask's sha256 against its release
+  check-quarantine-cleared.sh  # macOS: checks the postflight hook cleared quarantine
 ```
 
 The tap is casks only: there is no `Formula/` directory, and none may be
@@ -25,6 +26,25 @@ including rcs) were converted from the formulae that used to live in
 `binary "xiond-#{os}-#{arch}", target: "xiond"`. Five formulae had no release
 left on GitHub (v25.1.0-rc1, v26.1.0-rc1, v26.1.0-rc2, v27.0.0-rc1, v28.0.1)
 and have no cask.
+
+## macOS quarantine
+
+xiond is not notarized, and macOS kills a quarantined copy on launch. Every
+cask therefore ends with a `postflight` block that removes
+`com.apple.quarantine` from the binary it staged, in the shape GoReleaser
+renders for xion's `homebrew_casks` `hooks.post.install`:
+
+```ruby
+  postflight do
+    if OS.mac?
+      system_command "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "#{staged_path}/xiond"]
+    end
+  end
+```
+
+The bare-binary casks target `"#{staged_path}/xiond-darwin-#{arch}"`, the file
+they actually stage (`os` is not available inside a cask block, `arch` is). A
+cask added by hand needs the block too; CI fails a cask without it.
 
 `tap_migrations.json` lists every retired formula that has a cask, with the
 tap name (`"burnt-labs/xion"`) as the value: that is the form Homebrew needs to
@@ -49,11 +69,14 @@ https://github.com/burnt-labs/xion/pull/568.
 
 - `checksums`: runs `scripts/check-cask-checksums.py`.
 - `casks` / `install`: `brew install --cask` for every file in `Casks/` on
-  macOS and Ubuntu, then checks `xiond version` matches the cask version.
+  macOS and Ubuntu, then checks `xiond version` matches the cask version. On
+  macOS, `scripts/check-quarantine-cleared.sh` checks that the download was
+  quarantined and the installed binary no longer is.
 - `migrate-formula-to-cask`: installs a sample of retired formulae (`xiond`,
   `xiond@29`, `xiond@29.0.1`, the oldest, a bare-binary release, an rc and
   29.0.0) from the last tap commit that shipped them, updates the tap to the
-  commit under test and checks that `brew update` replaced each with its cask.
+  commit under test and checks that `brew update` replaced each with its cask,
+  with the same quarantine check on macOS.
 
 ### `tests.yml`
 

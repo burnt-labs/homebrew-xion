@@ -37,5 +37,11 @@ cask "xiond@12.0.1" do
   # This release shipped bare binaries named per platform, not archives.
   binary "xiond-#{os}-#{arch}", target: "xiond"
 
+  postflight do
+    if OS.mac?
+      system_command "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "#{staged_path}/xiond-darwin-#{arch}"]
+    end
+  end
+
   # No zap stanza required
 end
