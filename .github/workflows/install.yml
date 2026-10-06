@@ -10,75 +10,48 @@ on:
   workflow_dispatch:
 
 jobs:
+  # Every sha256 must match the checksums file of its xion release.
+  checksums:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check cask checksums against the releases
+        run: python3 scripts/check-cask-checksums.py
+
+  # The install matrix is every file in Casks/, so a new cask is tested
+  # without editing this workflow.
+  casks:
+    runs-on: ubuntu-latest
+    outputs:
+      casks: ${{ steps.list.outputs.casks }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: List casks
+        id: list
+        run: |
+          set -euo pipefail
+          # The tap is casks only.
+          test ! -e Formula
+          casks="$(find Casks -name '*.rb' -exec basename {} .rb \; | sort -V | jq -R . | jq -sc .)"
+          echo "$casks" | jq -r '.[]'
+          echo "casks=$casks" >> "$GITHUB_OUTPUT"
+
   install:
+    needs: casks
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         os: [macos-latest, ubuntu-latest]
-        version:
-          - "4.0.1"
-          - "4"
-          - "6.0.1"
-          - "6.1.1"
-          - "6"
-          - "7.0.1"
-          - "7"
-          - "8.0.2"
-          - "8"
-          - "9.0.2"
-          - "9"
-          - "11.0.2"
-          - "11"
-          - "12.0.0"
-          - "12.0.1"
-          - "12"
-          - "13.0.0"
-          - "13.0.1"
-          - "13"
-          - "14.0.0"
-          - "14.0.1"
-          - "14.1.0"
-          - "14.1.1"
-          - "14.1.2"
-          - "14"
-          - "15.0.1"
-          - "15"
-          - "16.0.1"
-          - "16"
-          - "17.0.1"
-          - "17.1.1"
-          - "17"
-          - "18.0.1"
-          - "18.0.2"
-          - "18"
-          - "19.0.1"
-          - "19.0.2"
-          - "19"
-          - "20.0.0"
-          - "20"
-          - "21.0.0"
-          - "21.0.1"
-          - "21"
-          - "22.0.0"
-          - "22"
-          - "23.0.0"
-          - "23"
-          - "24.0.0"
-          - "24"
-          - "25.0.1"
-          - "25.0.2"
-          - "25"
-          - "29.0.1"
-          - "29"
-          - "30.0.0"
-          - "30"
-          - "31.0.2"
-          - "31"
-          - "null"
+        cask: ${{ fromJSON(needs.casks.outputs.casks) }}
 
     env:
       HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK: 1
+      CASK: ${{ matrix.cask }}
 
     steps:
       - name: Checkout repository
@@ -88,11 +61,9 @@ jobs:
         run: |
           /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
-      - name: Install Xiond
+      - name: Install the cask
         run: |
-          echo "Matrix OS: ${{ matrix.os }}"
-          echo "Matrix version: ${{ matrix.version }}"
-
+          set -euo pipefail
           if [[ "${{ matrix.os }}" == "ubuntu-latest" ]]; then
             export PATH="/home/linuxbrew/.linuxbrew/bin:$PATH"
           fi
@@ -100,32 +71,65 @@ jobs:
           brew tap burnt-labs/xion ${{ github.workspace }}
           brew trust burnt-labs/xion
 
-          if [[ "${{ matrix.version }}" == "null" ]]; then
-            echo "Installing latest version of xiond"
-            brew install xiond
-          else
-            echo "Installing xiond version ${{ matrix.version }}"
-            brew install xiond@${{ matrix.version }}
-          fi
+          brew install --cask "burnt-labs/xion/$CASK"
 
+          expected="$(brew info --cask --json=v2 "burnt-labs/xion/$CASK" | jq -r '.casks[0].version')"
+          readlink "$(brew --prefix)/bin/xiond" | grep -q "/Caskroom/$CASK/$expected/"
           xiond version --long
+          # The v29.0.0 and v29.0.0-rc1 Linux release binaries were built as
+          # snapshots and report vVERSION-SNAPSHOT-<commit>.
+          got="$(xiond version)"
+          [[ "$got" == "v$expected" || "$got" == "v$expected-SNAPSHOT-"* ]]
 
-  # Users of the old `xiond`, `xiond@29` and `xiond@29.0.1` formulae must be moved to the
-  # casks by `brew update` (tap_migrations.json). Start from the last tap commit
-  # that still shipped those formulae, install one, move the tap to this commit
-  # and check that the cask replaced it.
+  # Users of a retired formula must be moved to the cask of the same name by
+  # `brew update` (tap_migrations.json). Start from the last tap commit that
+  # shipped the formula (`before`), install it, move the tap to this commit and
+  # check that the cask replaced it. `from` is the formula's version.
   migrate-formula-to-cask:
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         os: [macos-latest, ubuntu-latest]
-        formula: [xiond, xiond@29, xiond@29.0.1]
+        formula:
+          - xiond
+          - xiond@29
+          - xiond@29.0.1
+          - xiond@4.0.1
+          - xiond@12
+          - xiond@27.0.0-rc2
+          - xiond@29.0.0
+        include:
+          # Last commit with Formula/xiond.rb (frozen at 29.0.1).
+          - formula: xiond
+            before: fabb14346d35ac03733a6bc835e1108a373140a9
+            from: 29.0.1
+          - formula: xiond@29
+            before: fabb14346d35ac03733a6bc835e1108a373140a9
+            from: 29.0.1
+          - formula: xiond@29.0.1
+            before: fabb14346d35ac03733a6bc835e1108a373140a9
+            from: 29.0.1
+          # Last commit with Formula/: the oldest release, a release that
+          # shipped bare binaries instead of archives (most of v12 to v14),
+          # a release candidate and 29.0.0.
+          - formula: xiond@4.0.1
+            before: 1ec786317200eb360dd8075e1725bf830870ba3a
+            from: 4.0.1
+          - formula: xiond@12
+            before: 1ec786317200eb360dd8075e1725bf830870ba3a
+            from: 12.0.1
+          - formula: xiond@27.0.0-rc2
+            before: 1ec786317200eb360dd8075e1725bf830870ba3a
+            from: 27.0.0-rc2
+          - formula: xiond@29.0.0
+            before: 1ec786317200eb360dd8075e1725bf830870ba3a
+            from: 29.0.0
 
     env:
       HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK: 1
-      # Last commit with Formula/xiond.rb (frozen at 29.0.1).
-      BEFORE: fabb14346d35ac03733a6bc835e1108a373140a9
+      BEFORE: ${{ matrix.before }}
+      FROM: ${{ matrix.from }}
       FORMULA: ${{ matrix.formula }}
 
     steps:
@@ -157,8 +161,11 @@ jobs:
           # migration only runs when it exists.
           mkdir -p "$(brew --prefix)/Caskroom"
 
-          xiond version
-          test "$(xiond version)" = "v29.0.1"
+          # The v29.0.0 and v29.0.0-rc1 Linux release binaries were built as
+          # snapshots and report vVERSION-SNAPSHOT-<commit>.
+          got="$(xiond version)"
+          echo "$got"
+          [[ "$got" == "v$FROM" || "$got" == "v$FROM-SNAPSHOT-"* ]]
 
       - name: Update the tap to this commit
         run: |
@@ -179,11 +186,17 @@ jobs:
 
           brew list --cask --versions "$FORMULA"
           expected="$(brew info --cask --json=v2 "burnt-labs/xion/$FORMULA" | jq -r '.casks[0].version')"
-          xiond version
-          test "$(xiond version)" = "v$expected"
-          readlink "$(brew --prefix)/bin/xiond" | grep -q "/Caskroom/$FORMULA/"
+          is_expected() {
+            local got
+            got="$(xiond version)"
+            echo "$got"
+            [[ "$got" == "v$expected" || "$got" == "v$expected-SNAPSHOT-"* ]]
+          }
+          is_expected
+          readlink "$(brew --prefix)/bin/xiond" | grep -q "/Caskroom/$FORMULA/$expected/"
 
           # The step Homebrew asks the user to finish with, then a clean upgrade.
           brew uninstall --formula --force "$FORMULA"
           brew upgrade "$FORMULA"
-          test "$(xiond version)" = "v$expected"
+          is_expected
+          readlink "$(brew --prefix)/bin/xiond" | grep -q "/Caskroom/$FORMULA/$expected/"
