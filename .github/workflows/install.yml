@@ -72,6 +72,9 @@ jobs:
           brew trust burnt-labs/xion
 
           brew install --cask "burnt-labs/xion/$CASK"
+          # xiond is not notarized: each cask's postflight hook must clear
+          # the quarantine attribute, or macOS kills xiond on launch.
+          scripts/check-quarantine-cleared.sh "burnt-labs/xion/$CASK"
 
           expected="$(brew info --cask --json=v2 "burnt-labs/xion/$CASK" | jq -r '.casks[0].version')"
           readlink "$(brew --prefix)/bin/xiond" | grep -q "/Caskroom/$CASK/$expected/"
@@ -200,3 +203,4 @@ jobs:
           brew upgrade "$FORMULA"
           is_expected
           readlink "$(brew --prefix)/bin/xiond" | grep -q "/Caskroom/$FORMULA/$expected/"
+          scripts/check-quarantine-cleared.sh "burnt-labs/xion/$FORMULA"
