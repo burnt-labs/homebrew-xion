@@ -21,38 +21,34 @@ This is a **Homebrew tap** (third-party repository) that provides formulas for i
 │       ├── claude-code-review.yml  # Automated code reviews
 │       ├── install.yml      # Installation testing (72 version/OS combos)
 │       ├── publish.yml      # PR bottle publishing workflow
-│       ├── tests.yml        # Homebrew test-bot
-│       └── update-release.yaml    # ⭐ CORE AUTOMATION for formula updates
-├── Formula/                 # All Homebrew formula files (56 total)
-│   ├── xiond.rb            # Main formula (latest stable)
-│   ├── xiond@MAJOR.rb      # Major version formulas (e.g., xiond@26.rb)
-│   └── xiond@VERSION.rb    # Specific version formulas (e.g., xiond@25.0.2.rb)
+│       └── tests.yml        # Homebrew test-bot
+├── Casks/                   # Current releases (v29.0.1+), written by GoReleaser
+│   ├── xiond.rb            # Latest stable release
+│   ├── xiond@MAJOR.rb      # Major version casks (e.g., xiond@31.rb)
+│   └── xiond@VERSION.rb    # Specific version casks (e.g., xiond@31.0.2.rb)
+├── Formula/                 # Frozen formulae for releases before v29 (plus 29.0.0 and rcs)
+├── tap_migrations.json      # Moves the retired xiond / xiond@29 / xiond@29.0.1 formulae to casks
 ├── lib/
 │   └── base.rb             # Legacy base template (not actively used)
 ├── generate.sh             # Manual script to generate versioned formulas
 └── README.md               # User installation and troubleshooting guide
 ```
 
-## Formula Naming and Versioning Strategy
+## Casks Replace the Formulae (v30+)
 
-### Three Formula Types Per Release
+Since v30, GoReleaser in `burnt-labs/xion` (`homebrew_casks`) writes three
+casks per stable release: `Casks/xiond.rb`, `Casks/xiond@MAJOR.rb` and
+`Casks/xiond@VERSION.rb`. The formulae below are historical and frozen.
 
-For **every new release**, this tap maintains THREE formula files:
+**Never add a formula whose name matches a cask** (`Formula/xiond.rb`,
+`Formula/xiond@30.rb`, ...). Homebrew resolves the formula first, so anyone
+with it installed stops receiving upgrades. The `xiond`, `xiond@29` and
+`xiond@29.0.1` formulae were deleted for this reason and are listed in
+`tap_migrations.json` with the value `"burnt-labs/xion"` (tap name only: a
+fully qualified `burnt-labs/xion/xiond` value makes Homebrew skip a same-tap
+formula-to-cask migration).
 
-1. **Main Formula** (`xiond.rb`):
-   - Always points to the latest **stable** release (no pre-releases)
-   - Class name: `Xiond`
-   - Users get this with: `brew install xiond`
-
-2. **Major Version Formula** (`xiond@MAJOR.rb`):
-   - Updated to latest version within the major version (e.g., `xiond@26.rb`)
-   - Class name: `XiondATMAJOR` (e.g., `XiondAT26`)
-   - Users get this with: `brew install xiond@26`
-
-3. **Specific Version Formula** (`xiond@VERSION.rb`):
-   - Pinned to exact version forever (e.g., `xiond@25.0.2.rb`)
-   - Class name: Version with dots removed (e.g., `XiondAT2502` for 25.0.2, `XiondAT2600-rc1` for 26.0.0-rc1)
-   - Users get this with: `brew install xiond@25.0.2`
+## Formula Naming and Versioning Strategy (historical, ≤ v29)
 
 ### Pre-release Handling
 
@@ -148,39 +144,14 @@ end
 
 ## Automated Release Workflow
 
-### The Core Automation: update-release.yaml
+A stable release in `burnt-labs/xion` runs GoReleaser, which pushes a
+`xiond-vVERSION` branch updating the three casks and opens a PR here
+(`Brew cask update for xiond version vVERSION`). Release candidates are
+skipped (`skip_upload: auto`). Check the cask checksums against
+`xiond-VERSION-checksums.txt` on the release before merging.
 
-This workflow is **triggered automatically** when a new xiond release is published in the burnt-labs/xion repository via `repository_dispatch` with type `homebrew-release-trigger`.
-
-**Workflow Steps:**
-
-1. **Extract Version Info**: Strips 'v' prefix, extracts major version, detects if pre-release
-2. **Download Checksums**: Fetches `xiond-VERSION-checksums.txt` from GitHub release
-3. **Extract SHA256 Hashes**: Parses checksums for all 4 platforms (darwin/linux × amd64/arm64)
-4. **Create Branch**: `xiond-vVERSION` (e.g., `xiond-v21.0.0`)
-5. **Update Main Formula**: ONLY for stable releases (skipped for pre-releases)
-6. **Create/Update Major Version Formula**: `Formula/xiond@MAJOR.rb`
-7. **Create/Update Specific Version Formula**: `Formula/xiond@VERSION.rb`
-8. **Commit Changes**: Message format: `Brew formula update for xiond version vVERSION`
-9. **Push Branch**: Force push if needed
-10. **Create PR**: With "automated" label, includes installation instructions
-
-**Environment Variables Required:**
-- `BURNT_PAT_GITHUB_ACTIONS_TOKEN`: GitHub PAT for downloading release assets and creating PRs
-
-### Manual Formula Generation
-
-Use `generate.sh` for development/testing:
-
-```bash
-./generate.sh 21.0.0
-```
-
-This script:
-- Detects version format (v14 and earlier vs v15+)
-- Downloads checksums from GitHub releases
-- Generates both major and specific version formulas
-- Handles platform-specific binary naming differences
+`generate.sh` is a legacy helper for the old formula layout; do not use it for
+v29 or later.
 
 ## Testing and CI/CD
 
@@ -213,21 +184,11 @@ This script:
 
 ## Common Tasks
 
-### Adding a New Formula Version
+### Adding a New Release
 
-**Automated (Preferred):**
-1. New xiond release is published in burnt-labs/xion
-2. That repo triggers `repository_dispatch` → `update-release.yaml`
-3. Workflow automatically creates PR with updated formulas
-4. Review PR and merge
-
-**Manual:**
-```bash
-./generate.sh 21.0.0
-git add Formula/
-git commit -m "Brew formula update for xiond version v21.0.0"
-git push
-```
+1. A stable xiond release is published in burnt-labs/xion
+2. GoReleaser opens the cask PR in this repository
+3. Review the checksums and merge
 
 ### Linting Formulas
 
@@ -351,8 +312,10 @@ Before committing changes to formulas:
 
 ## Quick Reference: File Locations
 
-- Main formula: `/Formula/xiond.rb`
-- Versioned formulas: `/Formula/xiond@*.rb`
-- Core automation: `/.github/workflows/update-release.yaml`
-- Generation script: `/generate.sh`
+- Latest cask: `/Casks/xiond.rb`
+- Versioned casks: `/Casks/xiond@*.rb`
+- Frozen formulas (≤ v29): `/Formula/xiond@*.rb`
+- Formula-to-cask migrations: `/tap_migrations.json`
+- Release automation: GoReleaser in `burnt-labs/xion` (`.goreleaser/release.yaml`)
+- Legacy generation script: `/generate.sh`
 - Installation tests: `/.github/workflows/install.yml`
