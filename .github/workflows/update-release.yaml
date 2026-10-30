@@ -20,7 +20,7 @@ permissions:
 
 jobs:
   update-homebrew:
-    runs-on: ubuntu-latest
+    runs-on: ubicloud-standard-2
     steps:
       - name: Checkout homebrew-xion
         uses: actions/checkout@v5
