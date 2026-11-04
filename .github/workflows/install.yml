@@ -59,6 +59,12 @@ jobs:
 
       - name: Set up Homebrew
         run: |
+          set -euo pipefail
+          # The Ubicloud Linux image ships a Homebrew prefix owned by another
+          # user; the installer refuses to run over a Cellar it cannot write.
+          if [[ "$RUNNER_OS" == "Linux" && -d /home/linuxbrew/.linuxbrew ]]; then
+            sudo chown -R "$(id -un)" /home/linuxbrew/.linuxbrew
+          fi
           /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
       - name: Install the cask
@@ -143,6 +149,12 @@ jobs:
 
       - name: Set up Homebrew
         run: |
+          set -euo pipefail
+          # The Ubicloud Linux image ships a Homebrew prefix owned by another
+          # user; the installer refuses to run over a Cellar it cannot write.
+          if [[ "$RUNNER_OS" == "Linux" && -d /home/linuxbrew/.linuxbrew ]]; then
+            sudo chown -R "$(id -un)" /home/linuxbrew/.linuxbrew
+          fi
           /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
       - name: Install the formula from the pre-migration tap
