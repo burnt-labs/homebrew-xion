@@ -12,7 +12,7 @@ on:
 jobs:
   # Every sha256 must match the checksums file of its xion release.
   checksums:
-    runs-on: ubuntu-latest
+    runs-on: ubicloud-standard-2
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -23,7 +23,7 @@ jobs:
   # The install matrix is every file in Casks/, so a new cask is tested
   # without editing this workflow.
   casks:
-    runs-on: ubuntu-latest
+    runs-on: ubicloud-standard-2
     outputs:
       casks: ${{ steps.list.outputs.casks }}
     steps:
@@ -46,7 +46,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-latest, ubuntu-latest]
+        os: [macos-latest, ubicloud-standard-2]
         cask: ${{ fromJSON(needs.casks.outputs.casks) }}
 
     env:
@@ -59,12 +59,18 @@ jobs:
 
       - name: Set up Homebrew
         run: |
+          set -euo pipefail
+          # The Ubicloud Linux image ships a Homebrew prefix owned by another
+          # user; the installer refuses to run over a Cellar it cannot write.
+          if [[ "$RUNNER_OS" == "Linux" && -d /home/linuxbrew/.linuxbrew ]]; then
+            sudo chown -R "$(id -un)" /home/linuxbrew/.linuxbrew
+          fi
           /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
       - name: Install the cask
         run: |
           set -euo pipefail
-          if [[ "${{ matrix.os }}" == "ubuntu-latest" ]]; then
+          if [[ "$RUNNER_OS" == "Linux" ]]; then
             export PATH="/home/linuxbrew/.linuxbrew/bin:$PATH"
           fi
 
@@ -93,7 +99,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-latest, ubuntu-latest]
+        os: [macos-latest, ubicloud-standard-2]
         formula:
           - xiond
           - xiond@29
@@ -143,12 +149,18 @@ jobs:
 
       - name: Set up Homebrew
         run: |
+          set -euo pipefail
+          # The Ubicloud Linux image ships a Homebrew prefix owned by another
+          # user; the installer refuses to run over a Cellar it cannot write.
+          if [[ "$RUNNER_OS" == "Linux" && -d /home/linuxbrew/.linuxbrew ]]; then
+            sudo chown -R "$(id -un)" /home/linuxbrew/.linuxbrew
+          fi
           /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
       - name: Install the formula from the pre-migration tap
         run: |
           set -euo pipefail
-          if [[ "${{ matrix.os }}" == "ubuntu-latest" ]]; then
+          if [[ "$RUNNER_OS" == "Linux" ]]; then
             export PATH="/home/linuxbrew/.linuxbrew/bin:$PATH"
           fi
 
@@ -173,7 +185,7 @@ jobs:
       - name: Update the tap to this commit
         run: |
           set -euo pipefail
-          if [[ "${{ matrix.os }}" == "ubuntu-latest" ]]; then
+          if [[ "$RUNNER_OS" == "Linux" ]]; then
             export PATH="/home/linuxbrew/.linuxbrew/bin:$PATH"
           fi
 
@@ -183,7 +195,7 @@ jobs:
       - name: Check that the cask replaced the formula
         run: |
           set -euo pipefail
-          if [[ "${{ matrix.os }}" == "ubuntu-latest" ]]; then
+          if [[ "$RUNNER_OS" == "Linux" ]]; then
             export PATH="/home/linuxbrew/.linuxbrew/bin:$PATH"
           fi
 
