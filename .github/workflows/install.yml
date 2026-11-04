@@ -42,13 +42,11 @@ jobs:
 
   install:
     needs: casks
-    # macOS runs in the org's macos-15 runner group; hosted macos-latest is
-    # not available to this repository.
-    runs-on: ${{ startsWith(matrix.os, 'macos') && fromJSON('{"group":"macos-15"}') || matrix.os }}
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-15, ubicloud-standard-2]
+        os: [macos-latest, ubicloud-standard-2]
         cask: ${{ fromJSON(needs.casks.outputs.casks) }}
 
     env:
@@ -97,13 +95,11 @@ jobs:
   # shipped the formula (`before`), install it, move the tap to this commit and
   # check that the cask replaced it. `from` is the formula's version.
   migrate-formula-to-cask:
-    # macOS runs in the org's macos-15 runner group; hosted macos-latest is
-    # not available to this repository.
-    runs-on: ${{ startsWith(matrix.os, 'macos') && fromJSON('{"group":"macos-15"}') || matrix.os }}
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-15, ubicloud-standard-2]
+        os: [macos-latest, ubicloud-standard-2]
         formula:
           - xiond
           - xiond@29
