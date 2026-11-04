@@ -1,0 +1,18 @@
+name: runner-probe
+on:
+  push:
+    branches: ['work/burntbot/runner-probe-**']
+jobs:
+  probe:
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-latest, ubuntu-24.04, macos-latest, macos-15, macos-14, macos-26]
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - run: uname -a
+  group:
+    runs-on:
+      group: macos-15
+    steps:
+      - run: uname -a
